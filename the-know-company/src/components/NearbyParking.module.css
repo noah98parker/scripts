@@ -27,6 +27,14 @@
   color: var(--gray-400) !important;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+/* keep .header for backward compat */
 .header {
   display: flex;
   align-items: center;
@@ -34,18 +42,93 @@
 }
 
 .heading {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--gray-800);
+  color: var(--gray-700);
+}
+
+.countGroup {
+  display: flex;
+  gap: 4px;
 }
 
 .count {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--brand-primary);
   background: var(--blue-light);
   padding: 3px 10px;
   border-radius: 100px;
+}
+
+.countGoogle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4285f4;
+  background: #e8f0fe;
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+/* ── Source badge ── */
+.sourceBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+
+/* ── Star rating ── */
+.stars {
+  font-size: 11px;
+  color: #d97706;
+  letter-spacing: -1px;
+}
+
+/* ── City meter card ── */
+.meterCard {
+  border: 1px solid var(--green-light);
+  border-radius: var(--radius);
+  background: #f0fdf4;
+  overflow: hidden;
+}
+
+.meterTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 6px;
+}
+
+.meterIcon { font-size: 22px; }
+
+.meterInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meterName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.meterDetails {
+  padding: 0 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* ── Card name row (with badge) ── */
+.cardNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .list {

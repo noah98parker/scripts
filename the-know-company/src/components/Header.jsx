@@ -1,6 +1,9 @@
 import styles from './Header.module.css';
+import { getGoogleApiKey } from '../services/googlePlaces';
 
-export default function Header({ notifPermission, onRequestNotif, geocodeInfo }) {
+export default function Header({ notifPermission, onRequestNotif, geocodeInfo, onOpenSettings }) {
+  const hasGoogleKey = !!getGoogleApiKey();
+
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
@@ -33,6 +36,13 @@ export default function Header({ notifPermission, onRequestNotif, geocodeInfo })
         {notifPermission === 'granted' && (
           <span className={styles.notifActive}>🔔 Alerts On</span>
         )}
+        <button
+          className={styles.settingsBtn}
+          onClick={onOpenSettings}
+          title={hasGoogleKey ? 'Settings (Google Places active)' : 'Settings — Add Google Places key for richer data'}
+        >
+          {hasGoogleKey ? '⚙️✓' : '⚙️'}
+        </button>
       </div>
     </header>
   );
