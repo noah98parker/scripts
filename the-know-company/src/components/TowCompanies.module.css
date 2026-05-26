@@ -1,0 +1,191 @@
+.panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lawCard {
+  background: var(--red-light);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lawTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--red);
+}
+
+.lawDetail {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.4;
+}
+
+.lawIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.osmEmpty {
+  text-align: center;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+}
+
+.osmEmpty p {
+  font-size: 13px;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.cardIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.cardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dist {
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+.phone {
+  display: block;
+  font-size: 12px;
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.hours {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.cardActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.callBtn {
+  background: var(--green);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dirBtn {
+  background: var(--brand-primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nationalList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nationalCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-100);
+}
+
+.nationalIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.nationalInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.nationalName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.nationalNote {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+  line-height: 1.3;
+}

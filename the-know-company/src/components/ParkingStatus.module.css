@@ -1,0 +1,180 @@
+.panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+}
+
+.empty p {
+  color: var(--gray-500);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.verdictCard {
+  border: 2px solid;
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.verdictEmoji {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.verdictAnswer {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.maxstay {
+  background: var(--brand-primary);
+  color: white;
+  border-radius: 100px;
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.pinNote {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+.locationInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+}
+
+.locationIcon {
+  font-size: 20px;
+}
+
+.locationMain {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.coords {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-family: monospace;
+  margin-top: 2px;
+}
+
+.sourceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid var(--gray-100);
+}
+
+.sourceLabel {
+  font-size: 11px;
+  color: var(--gray-400);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sourceValue {
+  font-size: 12px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.noteCard {
+  background: var(--blue-light);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.noteTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+
+.noteText {
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.towCard {
+  background: var(--red-light);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.towTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+
+.towText {
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+}
+
+.infoIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.4;
+}

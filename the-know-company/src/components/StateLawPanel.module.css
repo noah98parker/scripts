@@ -1,0 +1,128 @@
+.panel {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyIcon { font-size: 48px; }
+
+.empty p {
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.stateHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark));
+  border-radius: var(--radius-lg);
+  color: white;
+}
+
+.stateEmoji {
+  font-size: 32px;
+}
+
+.stateName {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+}
+
+.stateLabel {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: var(--gray-50);
+}
+
+.rowIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.rowContent {
+  flex: 1;
+}
+
+.rowLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+.rowValue {
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.allStates {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  border: 1px solid var(--gray-200);
+}
+
+.allStatesTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.stateGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stateChip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-200);
+  color: var(--gray-600);
+  cursor: default;
+  transition: all 0.1s;
+}
+
+.stateChipActive {
+  background: var(--brand-primary);
+  color: white;
+  transform: scale(1.05);
+}
