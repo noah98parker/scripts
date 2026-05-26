@@ -7,56 +7,48 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const useSettingsStore = create(
   persist(
     (set) => ({
-      // ---------------------------------------------------------------------------
-      // Persisted state with defaults
-      // ---------------------------------------------------------------------------
-
-      // Whether push notifications are enabled for parking timers
+      // ── Persisted state ──────────────────────────────────────────────────
       notificationsEnabled: true,
-
-      // How many minutes before expiry to send the warning notification
       timerWarningMinutes: 10,
 
-      // Default parking timer duration in minutes (2 hours)
+      // Duration field — exposed under TWO names so both old and new screens work:
+      //   screens use:         defaultDurationMinutes
+      //   original store used: defaultTimerDuration
       defaultTimerDuration: 120,
+      get defaultDurationMinutes() { return this.defaultTimerDuration; },
 
-      // Whether to fetch city open data (Socrata SODA APIs)
+      // City open data — exposed under TWO names:
+      //   screens use:         useCityData
+      //   original store used: useCityOpenData
       useCityOpenData: true,
+      get useCityData() { return this.useCityOpenData; },
 
-      // Whether to use Google Places API (off by default until user enters a key)
       useGooglePlaces: false,
-
-      // Whether the user has completed the onboarding flow
       onboardingComplete: false,
 
-      // ---------------------------------------------------------------------------
-      // Actions: individual setters
-      // ---------------------------------------------------------------------------
+      // ── Actions ──────────────────────────────────────────────────────────
+      setNotificationsEnabled: (v)  => set({ notificationsEnabled: v }),
+      setTimerWarningMinutes:  (m)  => set({ timerWarningMinutes: m }),
 
-      setNotificationsEnabled: (value) => set({ notificationsEnabled: value }),
+      // Accepts both setter names
+      setDefaultTimerDuration:   (m) => set({ defaultTimerDuration: m }),
+      setDefaultDurationMinutes: (m) => set({ defaultTimerDuration: m }),
 
-      setTimerWarningMinutes: (minutes) => set({ timerWarningMinutes: minutes }),
+      // Accepts both setter names
+      setUseCityOpenData: (v) => set({ useCityOpenData: v }),
+      setUseCityData:     (v) => set({ useCityOpenData: v }),
 
-      setDefaultTimerDuration: (minutes) => set({ defaultTimerDuration: minutes }),
+      setUseGooglePlaces:    (v) => set({ useGooglePlaces: v }),
+      setOnboardingComplete: (v) => set({ onboardingComplete: v }),
 
-      setUseCityOpenData: (value) => set({ useCityOpenData: value }),
-
-      setUseGooglePlaces: (value) => set({ useGooglePlaces: value }),
-
-      setOnboardingComplete: (value) => set({ onboardingComplete: value }),
-
-      // ---------------------------------------------------------------------------
-      // resetSettings: restore all settings to their defaults
-      // ---------------------------------------------------------------------------
-      resetSettings: () =>
-        set({
-          notificationsEnabled: true,
-          timerWarningMinutes: 10,
-          defaultTimerDuration: 120,
-          useCityOpenData: true,
-          useGooglePlaces: false,
-          onboardingComplete: false,
-        }),
+      resetSettings: () => set({
+        notificationsEnabled: true,
+        timerWarningMinutes: 10,
+        defaultTimerDuration: 120,
+        useCityOpenData: true,
+        useGooglePlaces: false,
+        onboardingComplete: false,
+      }),
     }),
     {
       name: 'tkc-settings',
@@ -65,4 +57,5 @@ const useSettingsStore = create(
   )
 );
 
+export { useSettingsStore };
 export default useSettingsStore;

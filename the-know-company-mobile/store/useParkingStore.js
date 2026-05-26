@@ -1,73 +1,130 @@
-// Zustand store for all parking-related data
+// Zustand store for all parking-related state + CRUD actions (favorites, timers)
 
 import { create } from 'zustand';
+import {
+  addFavorite as dbAddFavorite,
+  removeFavorite as dbRemoveFavorite,
+  createTimer as dbCreateTimer,
+  completeTimer as dbCompleteTimer,
+} from '../services/supabase';
+import { scheduleParkingTimer, cancelTimer as cancelNotifications } from '../services/notifications';
 
-const useParkingStore = create((set) => ({
-  // ---------------------------------------------------------------------------
-  // State
-  // ---------------------------------------------------------------------------
-
-  // User's current GPS coordinates
+const useParkingStore = create((set, get) => ({
+  // ── Location & map ───────────────────────────────────────────────────────
   userLocation: null,
-
-  // A tapped map location the user wants to inspect
   activePin: null,
 
-  // Computed parking verdict (from computeVerdict in parkingRules.js)
+  // ── Parking verdict ───────────────────────────────────────────────────────
   verdict: null,
-
-  // Reverse geocode result (from reverseGeocode in parkingRules.js)
   geocodeInfo: null,
 
-  // Combined parking results: Overpass + Google Places + city open data
-  nearbyParking: [],
-
-  // Tow companies from Overpass
+  // ── Nearby data ───────────────────────────────────────────────────────────
+  nearbyParking: [],   // OSM + Google Places merged
   towCompanies: [],
+  cityMeters: [],      // Socrata city open data
 
-  // City-specific parking meter data from Socrata/SODA APIs
-  cityMeters: [],
-
-  // Saved favorites from Supabase
+  // ── User data (requires Supabase account) ────────────────────────────────
   favorites: [],
-
-  // Active parking timers from Supabase
   activeTimers: [],
 
-  // Whether a data-fetch operation is in progress
+  // ── UI state ─────────────────────────────────────────────────────────────
   dataLoading: false,
-
-  // Key representing the last fetched location (e.g. "lat,lon" string)
-  // Used to avoid redundant re-fetches
   lastFetchKey: null,
 
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
+  // ── Basic setters ────────────────────────────────────────────────────────
+  setUserLocation:  (loc)  => set({ userLocation: loc }),
+  setActivePin:     (loc)  => set({ activePin: loc }),
+  clearPin:         ()     => set({ activePin: null }),
+  setVerdict:       (v)    => set({ verdict: v }),
+  setGeocodeInfo:   (g)    => set({ geocodeInfo: g }),
+  setNearbyParking: (arr)  => set({ nearbyParking: arr }),
+  setTowCompanies:  (arr)  => set({ towCompanies: arr }),
+  setCityMeters:    (arr)  => set({ cityMeters: arr }),
+  setFavorites:     (arr)  => set({ favorites: arr }),
+  setActiveTimers:  (arr)  => set({ activeTimers: arr }),
+  setDataLoading:   (bool) => set({ dataLoading: bool }),
+  setLastFetchKey:  (key)  => set({ lastFetchKey: key }),
 
-  setUserLocation: (loc) => set({ userLocation: loc }),
+  // ── addFavorite ───────────────────────────────────────────────────────────
+  // Persists to Supabase and optimistically prepends to local state.
+  addFavorite: async (userId, spotData) => {
+    // spotData: { name, lat, lon, address?, notes? }
+    try {
+      const result = await dbAddFavorite(userId, spotData);
+      if (result) {
+        set(state => ({ favorites: [result, ...state.favorites] }));
+      }
+      return result;
+    } catch (err) {
+      console.warn('addFavorite error:', err);
+      return null;
+    }
+  },
 
-  setActivePin: (loc) => set({ activePin: loc }),
+  // ── removeFavorite ────────────────────────────────────────────────────────
+  // Removes from Supabase and filters out of local state.
+  removeFavorite: async (id) => {
+    try {
+      await dbRemoveFavorite(id);
+      set(state => ({ favorites: state.favorites.filter(f => f.id !== id) }));
+    } catch (err) {
+      console.warn('removeFavorite error:', err);
+    }
+  },
 
-  clearPin: () => set({ activePin: null }),
+  // ── startTimer ────────────────────────────────────────────────────────────
+  // Schedules local notifications and persists the timer to Supabase.
+  startTimer: async (userId, { spotName, lat, lon, durationMinutes, warningMinutes = 10 }) => {
+    const startedAt = new Date();
+    let warningNotifId = null;
+    let expiryNotifId  = null;
 
-  setVerdict: (v) => set({ verdict: v }),
+    try {
+      const notifIds = await scheduleParkingTimer(spotName, startedAt, durationMinutes, warningMinutes);
+      warningNotifId = notifIds?.warningId ?? null;
+      expiryNotifId  = notifIds?.expiryId  ?? null;
+    } catch (err) {
+      console.warn('Notification scheduling error:', err);
+    }
 
-  setGeocodeInfo: (g) => set({ geocodeInfo: g }),
+    try {
+      const timer = await dbCreateTimer(userId, {
+        spotName,
+        lat,
+        lon,
+        startedAt: startedAt.toISOString(),
+        durationMinutes,
+        notificationIds: { warningId: warningNotifId, expiryId: expiryNotifId },
+      });
+      if (timer) {
+        set(state => ({ activeTimers: [timer, ...state.activeTimers] }));
+      }
+      return timer;
+    } catch (err) {
+      console.warn('startTimer DB error:', err);
+      return null;
+    }
+  },
 
-  setNearbyParking: (arr) => set({ nearbyParking: arr }),
-
-  setTowCompanies: (arr) => set({ towCompanies: arr }),
-
-  setCityMeters: (arr) => set({ cityMeters: arr }),
-
-  setFavorites: (arr) => set({ favorites: arr }),
-
-  setActiveTimers: (arr) => set({ activeTimers: arr }),
-
-  setDataLoading: (bool) => set({ dataLoading: bool }),
-
-  setLastFetchKey: (key) => set({ lastFetchKey: key }),
+  // ── cancelTimer ───────────────────────────────────────────────────────────
+  // Cancels notifications and marks the timer complete in Supabase.
+  cancelTimer: async (timerId) => {
+    const timer = get().activeTimers.find(t => t.id === timerId);
+    if (timer) {
+      try {
+        await cancelNotifications(timer.warning_notif_id, timer.expiry_notif_id);
+      } catch (err) {
+        console.warn('Cancel notification error:', err);
+      }
+    }
+    try {
+      await dbCompleteTimer(timerId);
+    } catch (err) {
+      console.warn('completeTimer DB error:', err);
+    }
+    set(state => ({ activeTimers: state.activeTimers.filter(t => t.id !== timerId) }));
+  },
 }));
 
+export { useParkingStore };
 export default useParkingStore;
