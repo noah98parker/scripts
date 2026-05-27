@@ -4,14 +4,12 @@
  * Accepts a base64-encoded parking sign image and returns a plain-English
  * interpretation using Claude's vision API.
  *
- * Body: { imageBase64: string, mediaType: string, userApiKey?: string }
+ * Body: { imageBase64: string, mediaType?: string }
  *
  * Set ANTHROPIC_API_KEY in Vercel → Settings → Environment Variables.
- * Users can also supply their own key (passed as userApiKey in the body).
  */
 
 export default async function handler(req, res) {
-  // CORS headers so the browser can call this
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,17 +17,16 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { imageBase64, mediaType = 'image/jpeg', userApiKey } = req.body || {};
+  const { imageBase64, mediaType = 'image/jpeg' } = req.body || {};
 
   if (!imageBase64) {
     return res.status(400).json({ error: 'imageBase64 is required' });
   }
 
-  const apiKey = userApiKey || process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return res.status(503).json({
-      error: 'no_key',
-      message: 'Sign Decoder requires an Anthropic API key. Add ANTHROPIC_API_KEY to your Vercel environment variables, or enter your own key in ⚙️ Settings.',
+      error: 'Sign Decoder is not configured. The app owner needs to add ANTHROPIC_API_KEY to Vercel environment variables.',
     });
   }
 
@@ -77,15 +74,14 @@ Be direct and specific. If the sign is unclear or hard to read, say so.`,
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text();
       console.error('Anthropic API error:', anthropicRes.status, errText);
-      return res.status(502).json({ error: 'Anthropic API error', detail: errText });
+      return res.status(502).json({ error: 'Could not reach the AI service. Please try again.' });
     }
 
     const data = await anthropicRes.json();
     const text = data.content?.[0]?.text || 'Could not interpret the sign.';
-
     return res.status(200).json({ interpretation: text });
   } catch (err) {
     console.error('decode-sign error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 }

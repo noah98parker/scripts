@@ -104,12 +104,6 @@ export default function SignDecoder() {
         <div className={styles.errorArea}>
           <div className={styles.errorIcon}>⚠️</div>
           <div className={styles.errorMsg}>{errorMsg}</div>
-          {(errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('anthropic') || errorMsg.toLowerCase().includes('no_key')) && (
-            <div className={styles.errorHelp}>
-              Add <code>ANTHROPIC_API_KEY</code> to your Vercel environment variables,
-              or enter your own key in <strong>⚙️ Settings</strong>.
-            </div>
-          )}
           <button className={styles.resetBtn} onClick={handleReset}>Try again</button>
         </div>
       )}
