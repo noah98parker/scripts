@@ -179,8 +179,53 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* ── Overnight info ── */}
-      {verdict.stateLaw?.overnight && (
+      {/* ── Parking lot specific details ── */}
+      {verdict.isLot && (
+        <div className={styles.lotDetailsCard}>
+          <div className={styles.lotDetailsTitle}>🏢 Parking Lot Details</div>
+          <div className={styles.lotDetailsGrid}>
+            {verdict.operator && (
+              <div className={styles.lotDetailItem}>
+                <span className={styles.lotDetailIcon}>🏷️</span>
+                <div>
+                  <div className={styles.infoLabel}>Operator</div>
+                  <div className={styles.infoValue}>{verdict.operator}</div>
+                </div>
+              </div>
+            )}
+            {verdict.opening_hours && (
+              <div className={styles.lotDetailItem}>
+                <span className={styles.lotDetailIcon}>🕐</span>
+                <div>
+                  <div className={styles.infoLabel}>Hours</div>
+                  <div className={styles.infoValue}>{verdict.opening_hours}</div>
+                </div>
+              </div>
+            )}
+            {verdict.capacity && (
+              <div className={styles.lotDetailItem}>
+                <span className={styles.lotDetailIcon}>🚗</span>
+                <div>
+                  <div className={styles.infoLabel}>Capacity</div>
+                  <div className={styles.infoValue}>{verdict.capacity}</div>
+                </div>
+              </div>
+            )}
+            {verdict.charge && (
+              <div className={styles.lotDetailItem}>
+                <span className={styles.lotDetailIcon}>💵</span>
+                <div>
+                  <div className={styles.infoLabel}>Rate</div>
+                  <div className={styles.infoValue}>{verdict.charge}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Overnight info (street parking only) ── */}
+      {!verdict.isLot && verdict.stateLaw?.overnight && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🌙</span>
           <div>
@@ -190,8 +235,8 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* ── Street cleaning ── */}
-      {verdict.stateLaw?.streetCleaning && (
+      {/* ── Street cleaning (street parking only) ── */}
+      {!verdict.isLot && verdict.stateLaw?.streetCleaning && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🧹</span>
           <div>
@@ -201,8 +246,8 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* ── Permit zones ── */}
-      {verdict.stateLaw?.permitZones && (
+      {/* ── Permit zones (street parking only) ── */}
+      {!verdict.isLot && verdict.stateLaw?.permitZones && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🪧</span>
           <div>

@@ -82,6 +82,7 @@ export async function fetchNearbyTowCompanies(lat, lon, radiusM = 5000) {
 
 /**
  * Query parking restriction nodes/ways near a point.
+ * Also fetches amenity=parking areas so tapping on a lot shows lot-specific info.
  */
 export async function fetchParkingRestrictions(lat, lon, radiusM = 150) {
   const query = `
@@ -92,6 +93,8 @@ export async function fetchParkingRestrictions(lat, lon, radiusM = 150) {
       way["parking:lane:right"](around:${radiusM},${lat},${lon});
       way["parking:lane:left"](around:${radiusM},${lat},${lon});
       way["parking:lane:both"](around:${radiusM},${lat},${lon});
+      node["amenity"="parking"](around:100,${lat},${lon});
+      way["amenity"="parking"](around:100,${lat},${lon});
     );
     out center tags;
   `;

@@ -246,6 +246,43 @@
   line-height: 1.5;
 }
 
+/* ── Parking lot details card ── */
+.lotDetailsCard {
+  background: var(--blue-light);
+  border: 1px solid var(--blue);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lotDetailsTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.lotDetailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lotDetailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lotDetailIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .infoRow {
   display: flex;
   align-items: flex-start;
