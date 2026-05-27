@@ -93,7 +93,7 @@ export default function App() {
   const queryLocation = activePin || userLocation;
 
   const fetchAllData = useCallback(async (loc) => {
-    if (!loc) return;
+    if (!loc || typeof loc.lat !== 'number' || typeof loc.lon !== 'number') return;
     const key = `${loc.lat.toFixed(4)},${loc.lon.toFixed(4)}`;
     if (lastFetchRef.current === key) return;
     lastFetchRef.current = key;
@@ -158,8 +158,12 @@ export default function App() {
     if (queryLocation) fetchAllData(queryLocation);
   }, [queryLocation, fetchAllData]);
 
-  const handleMapClick = useCallback((latlng) => {
-    setActivePin({ lat: latlng.lat, lon: latlng.lng });
+  // Leaflet passes the full MouseEvent — coordinates live at e.latlng.lat / e.latlng.lng
+  const handleMapClick = useCallback((e) => {
+    const lat = e?.latlng?.lat;
+    const lon = e?.latlng?.lng;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return;
+    setActivePin({ lat, lon });
     lastFetchRef.current = null;
   }, []);
 
