@@ -107,7 +107,7 @@ export default function MapView({ userLocation, mapCenter, activePin, nearbyPark
         )}
 
         {/* Active pin (clicked location) */}
-        {activePin && (
+        {activePin && typeof activePin.lat === 'number' && typeof activePin.lon === 'number' && (
           <>
             <Circle
               center={[activePin.lat, activePin.lon]}
