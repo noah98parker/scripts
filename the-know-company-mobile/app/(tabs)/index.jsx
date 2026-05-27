@@ -342,6 +342,99 @@ export default function MapScreen() {
                 </View>
               )}
             </View>
+
+            {/* ── Nearby Garages section ── */}
+            {enrichedGarages.length > 0 && (
+              <View style={styles.garageSection}>
+                <Text style={styles.garageSectionTitle}>🏢 Nearby Garages</Text>
+                {enrichedGarages.map(garage => {
+                  const rateState = garageRates[garage.id] || { loading: false, data: null };
+                  const dist = garage.distance_m != null
+                    ? (garage.distance_m < 1000
+                        ? `${garage.distance_m}m away`
+                        : `${(garage.distance_m / 1609.34).toFixed(1)} mi away`)
+                    : null;
+                  return (
+                    <View key={garage.id} style={styles.garageCard}>
+                      {/* Header row */}
+                      <View style={styles.garageCardHeader}>
+                        <Text style={styles.garageCardName} numberOfLines={1}>{garage.name}</Text>
+                        <View style={styles.garageCardBadges}>
+                          {dist && <Text style={styles.garageDistBadge}>{dist}</Text>}
+                          {garage.open_now != null && (
+                            <Text style={[
+                              styles.garageStatusBadge,
+                              garage.open_now ? styles.garageStatusOpen : styles.garageStatusClosed
+                            ]}>
+                              {garage.open_now ? 'Open' : 'Closed'}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+
+                      {/* Address + rating */}
+                      {garage.address && (
+                        <Text style={styles.garageAddress} numberOfLines={1}>{garage.address}</Text>
+                      )}
+                      {garage.rating != null && (
+                        <Text style={styles.garageRating}>
+                          ★ {garage.rating.toFixed(1)}
+                          {garage.user_ratings_total != null ? ` (${garage.user_ratings_total})` : ''}
+                        </Text>
+                      )}
+
+                      {/* Rates row */}
+                      {rateState.loading ? (
+                        <Text style={styles.garageRatesLoading}>⏳ Loading rates...</Text>
+                      ) : rateState.data?.found_rates ? (
+                        <View style={styles.garageRatesRow}>
+                          {rateState.data.hourly && (
+                            <Text style={styles.garageRateChip}>💵 {rateState.data.hourly}</Text>
+                          )}
+                          {rateState.data.daily_max && (
+                            <Text style={styles.garageRateChip}>🅿️ {rateState.data.daily_max}</Text>
+                          )}
+                          {rateState.data.evening && (
+                            <Text style={styles.garageRateEveningChip}>🌙 {rateState.data.evening}</Text>
+                          )}
+                        </View>
+                      ) : garage.website ? (
+                        <Text style={styles.garageRatesFallback}>💵 Check website for current rates</Text>
+                      ) : null}
+
+                      {/* Action buttons */}
+                      <View style={styles.garageActions}>
+                        {garage.website && (
+                          <TouchableOpacity
+                            style={styles.garageActionBtn}
+                            onPress={() => Linking.openURL(garage.website)}
+                            activeOpacity={0.8}
+                          >
+                            <Text style={styles.garageActionBtnText}>🌐 View Rates & Info ↗</Text>
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                          style={styles.garageActionBtn}
+                          onPress={() => Linking.openURL(garage.maps_url)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.garageActionBtnText}>🗺️ Directions</Text>
+                        </TouchableOpacity>
+                        {garage.phone && (
+                          <TouchableOpacity
+                            style={[styles.garageActionBtn, styles.garageActionBtnPhone]}
+                            onPress={() => Linking.openURL(`tel:${garage.phone}`)}
+                            activeOpacity={0.8}
+                          >
+                            <Text style={[styles.garageActionBtnText, { color: colors.green }]}>📞 Call</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </ScrollView>
         ) : (
           <View style={styles.emptyCard}>
@@ -491,4 +584,34 @@ const styles = StyleSheet.create({
   decoderErrorText: { fontSize: font.md, color: colors.red, lineHeight: 20 },
   decoderHelpText: { fontSize: font.sm, color: colors.gray600, lineHeight: 18,
     borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.1)', paddingTop: spacing.sm },
+
+  // ── Nearby Garages (enriched) ──
+  garageSection: { marginTop: spacing.md, gap: spacing.sm },
+  garageSectionTitle: { fontSize: font.md, fontWeight: '700', color: colors.gray700 },
+  garageCard: { backgroundColor: colors.gray50, borderRadius: radius.lg, padding: spacing.md,
+    borderWidth: 1, borderColor: colors.gray200, gap: spacing.xs },
+  garageCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  garageCardName: { flex: 1, fontSize: font.md, fontWeight: '700', color: colors.gray900 },
+  garageCardBadges: { flexDirection: 'row', gap: spacing.xs, flexShrink: 0 },
+  garageDistBadge: { fontSize: 11, fontWeight: '700', color: colors.primary, backgroundColor: colors.blueLight,
+    paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full },
+  garageStatusBadge: { fontSize: 11, fontWeight: '700', paddingHorizontal: spacing.sm,
+    paddingVertical: 2, borderRadius: radius.full },
+  garageStatusOpen: { color: colors.green, backgroundColor: colors.greenLight },
+  garageStatusClosed: { color: colors.red, backgroundColor: colors.redLight },
+  garageAddress: { fontSize: font.sm, color: colors.gray500 },
+  garageRating: { fontSize: font.sm, color: '#d97706', fontWeight: '600' },
+  garageRatesLoading: { fontSize: font.sm, color: colors.gray400, fontStyle: 'italic' },
+  garageRatesFallback: { fontSize: font.sm, color: colors.gray500 },
+  garageRatesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  garageRateChip: { fontSize: 12, fontWeight: '700', color: colors.primary, backgroundColor: colors.blueLight,
+    paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.full },
+  garageRateEveningChip: { fontSize: 12, fontWeight: '700', color: '#7c3aed', backgroundColor: '#ede9fe',
+    paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.full },
+  garageActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  garageActionBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs, borderRadius: radius.full, backgroundColor: colors.blueLight,
+    borderWidth: 1, borderColor: colors.primary + '30' },
+  garageActionBtnPhone: { backgroundColor: colors.greenLight, borderColor: colors.green + '30' },
+  garageActionBtnText: { fontSize: 12, fontWeight: '600', color: colors.primary },
 });
