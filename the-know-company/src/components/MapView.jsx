@@ -66,7 +66,7 @@ function FlyTo({ center }) {
   return null;
 }
 
-export default function MapView({ userLocation, mapCenter, activePin, nearbyParking, towCompanies, verdict, onMapClick }) {
+export default function MapView({ userLocation, mapCenter, activePin, nearbyParking, enrichedGarages = [], towCompanies, verdict, onMapClick, onGarageSelect }) {
   const circleColor = verdict ? verdictColors[verdict.status] || '#6b7280' : '#1a56db';
 
   return (
@@ -127,12 +127,12 @@ export default function MapView({ userLocation, mapCenter, activePin, nearbyPark
           </>
         )}
 
-        {/* Nearby parking garages */}
+        {/* OSM parking lots / surface lots (context markers, no deep info) */}
         {nearbyParking.map(p => (
           <Marker
             key={p.id}
             position={[p.lat, p.lon]}
-            icon={makeIcon('🏢', '#2563eb')}
+            icon={makeIcon('🅿️', '#6b7280')}
           >
             <Popup>
               <div style={{ minWidth: 160 }}>
@@ -144,6 +144,43 @@ export default function MapView({ userLocation, mapCenter, activePin, nearbyPark
                   {p.opening_hours && <div>Hours: {p.opening_hours}</div>}
                   {p.operator && <div>Operator: {p.operator}</div>}
                 </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Enriched Google Places garages — tapping opens the Garages tab */}
+        {enrichedGarages.map(g => (
+          <Marker
+            key={g.id}
+            position={[g.lat, g.lon]}
+            icon={makeIcon('🅿️', '#1d4ed8')}
+            eventHandlers={{
+              click: () => onGarageSelect && onGarageSelect(g.id),
+            }}
+          >
+            <Popup>
+              <div style={{ minWidth: 180 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{g.name}</div>
+                {g.address && (
+                  <div style={{ fontSize: 12, color: '#4b5563', marginBottom: 6 }}>{g.address}</div>
+                )}
+                <button
+                  onClick={() => onGarageSelect && onGarageSelect(g.id)}
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px',
+                    background: '#1d4ed8',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  View Rates & Details →
+                </button>
               </div>
             </Popup>
           </Marker>
@@ -173,7 +210,8 @@ export default function MapView({ userLocation, mapCenter, activePin, nearbyPark
       {/* Map legend */}
       <div className={styles.legend}>
         <div className={styles.legendItem}><span className={styles.dot} style={{ background: '#059669' }}></span>You</div>
-        <div className={styles.legendItem}><span className={styles.dot} style={{ background: '#2563eb' }}></span>Garage</div>
+        <div className={styles.legendItem}><span className={styles.dot} style={{ background: '#1d4ed8' }}></span>Garage</div>
+        <div className={styles.legendItem}><span className={styles.dot} style={{ background: '#6b7280' }}></span>Lot</div>
         <div className={styles.legendItem}><span className={styles.dot} style={{ background: '#dc2626' }}></span>Tow Co.</div>
       </div>
 

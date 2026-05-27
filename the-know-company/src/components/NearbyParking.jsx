@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './NearbyParking.module.css';
 import { estimateRate } from '../services/parkingRules';
 
@@ -228,9 +228,19 @@ function GarageCard({ garage, geocodeInfo }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function NearbyParking({ garages, cityMeters = [], userLocation, geocodeInfo }) {
+export default function NearbyParking({ garages, cityMeters = [], userLocation, geocodeInfo, selectedGarageId, onGarageDeselect }) {
   const hasGarages = garages && garages.length > 0;
   const hasMeters  = cityMeters && cityMeters.length > 0;
+  const garageRefs = useRef({});
+
+  // Scroll to and highlight the selected garage whenever selectedGarageId changes
+  useEffect(() => {
+    if (!selectedGarageId) return;
+    const el = garageRefs.current[selectedGarageId];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [selectedGarageId]);
 
   if (!hasGarages && !hasMeters) {
     return (
@@ -268,13 +278,22 @@ export default function NearbyParking({ garages, cityMeters = [], userLocation, 
             <span className={styles.count}>{garages.length} found</span>
           </div>
           <div className={styles.list}>
-            {garages.map(garage => (
-              <GarageCard
-                key={garage.id}
-                garage={garage}
-                geocodeInfo={geocodeInfo}
-              />
-            ))}
+            {garages.map(garage => {
+              const isSelected = garage.id === selectedGarageId;
+              return (
+                <div
+                  key={garage.id}
+                  ref={el => { if (el) garageRefs.current[garage.id] = el; }}
+                  className={isSelected ? styles.garageHighlight : undefined}
+                  onClick={isSelected && onGarageDeselect ? onGarageDeselect : undefined}
+                >
+                  <GarageCard
+                    garage={garage}
+                    geocodeInfo={geocodeInfo}
+                  />
+                </div>
+              );
+            })}
           </div>
         </>
       )}

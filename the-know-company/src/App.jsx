@@ -45,10 +45,11 @@ export default function App() {
   const [cityMeters, setCityMeters]     = useState([]);
   const [towCompanies, setTowCompanies] = useState([]);
 
-  const [activeTab, setActiveTab]     = useState('status');
-  const [notification, setNotification] = useState(null);
+  const [activeTab, setActiveTab]         = useState('status');
+  const [selectedGarageId, setSelectedGarageId] = useState(null);
+  const [notification, setNotification]   = useState(null);
   const [notifPermission, setNotifPermission] = useState('default');
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen]   = useState(false);
 
   const lastFetchRef = useRef(null);
 
@@ -170,6 +171,11 @@ export default function App() {
     lastFetchRef.current = null;
   }, []);
 
+  const handleGarageSelect = useCallback((garageId) => {
+    setSelectedGarageId(garageId);
+    setActiveTab('parking');
+  }, []);
+
   const handleUseMyLocation = useCallback(() => {
     setActivePin(null);
     lastFetchRef.current = null;
@@ -208,10 +214,12 @@ export default function App() {
             mapCenter={mapCenter}
             activePin={activePin}
             nearbyParking={nearbyParking}
+            enrichedGarages={enrichedGarages}
             cityMeters={cityMeters}
             towCompanies={towCompanies}
             verdict={verdict}
             onMapClick={handleMapClick}
+            onGarageSelect={handleGarageSelect}
           />
           {activePin && (
             <button className={styles.myLocationBtn} onClick={handleUseMyLocation}>
@@ -262,6 +270,8 @@ export default function App() {
                     cityMeters={cityMeters}
                     userLocation={queryLocation}
                     geocodeInfo={geocodeInfo}
+                    selectedGarageId={selectedGarageId}
+                    onGarageDeselect={() => setSelectedGarageId(null)}
                   />
                 )}
                 {activeTab === 'tow' && (

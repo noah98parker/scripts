@@ -5,6 +5,19 @@
   gap: 12px;
 }
 
+/* Ring highlight when a garage is selected from the map */
+.garageHighlight {
+  border-radius: var(--radius-lg);
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+  animation: garageHighlightPulse 0.6s ease-out;
+}
+
+@keyframes garageHighlightPulse {
+  0%   { outline-color: #60a5fa; outline-width: 6px; }
+  100% { outline-color: #1d4ed8; outline-width: 3px; }
+}
+
 .empty {
   padding: 48px 24px;
   text-align: center;
