@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { getGoogleApiKey, setGoogleApiKey } from '../services/googlePlaces';
+import { getAnthropicApiKey, setAnthropicApiKey } from '../services/signDecoder';
 import styles from './SettingsModal.module.css';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [apiKey, setApiKey] = useState('');
+  const [anthropicKey, setAnthropicKey] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setApiKey(getGoogleApiKey());
+      setAnthropicKey(getAnthropicApiKey());
       setSaved(false);
     }
   }, [isOpen]);
@@ -17,6 +20,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   function handleSave() {
     setGoogleApiKey(apiKey.trim());
+    setAnthropicApiKey(anthropicKey.trim());
     setSaved(true);
     setTimeout(() => { setSaved(false); onClose(); }, 800);
   }
@@ -24,6 +28,11 @@ export default function SettingsModal({ isOpen, onClose }) {
   function handleClear() {
     setGoogleApiKey('');
     setApiKey('');
+  }
+
+  function handleClearAnthropic() {
+    setAnthropicApiKey('');
+    setAnthropicKey('');
   }
 
   return (
@@ -68,6 +77,46 @@ export default function SettingsModal({ isOpen, onClose }) {
             rel="noopener noreferrer"
           >
             How to get a free API key ↗
+          </a>
+        </section>
+
+        {/* Sign Decoder — Anthropic API key */}
+        <section className={styles.section}>
+          <div className={styles.sectionTitle}>
+            <span>📸 Sign Decoder (AI)</span>
+            <span className={`${styles.badge} ${getAnthropicApiKey() || import.meta.env.VITE_ANTHROPIC_API_KEY ? styles.badgeActive : styles.badgeOff}`}>
+              {getAnthropicApiKey() || import.meta.env.VITE_ANTHROPIC_API_KEY ? 'Active' : 'Not set'}
+            </span>
+          </div>
+          <p className={styles.sectionDesc}>
+            Point your camera at a confusing parking sign — AI reads it and tells you exactly when and how long you can park. Uses Claude AI.
+          </p>
+          <div className={styles.inputRow}>
+            <input
+              className={styles.input}
+              type="password"
+              placeholder="sk-ant-…"
+              value={anthropicKey}
+              onChange={e => setAnthropicKey(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {anthropicKey && (
+              <button className={styles.clearBtn} onClick={handleClearAnthropic} title="Clear key">
+                ✕
+              </button>
+            )}
+          </div>
+          <p className={styles.sectionDesc} style={{ marginTop: 4 }}>
+            Or add <code style={{ fontFamily: 'monospace', background: '#f3f4f6', padding: '1px 4px', borderRadius: 3 }}>ANTHROPIC_API_KEY</code> to your Vercel environment variables (recommended — keeps the key server-side).
+          </p>
+          <a
+            className={styles.link}
+            href="https://console.anthropic.com/settings/keys"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Get an Anthropic API key ↗
           </a>
         </section>
 

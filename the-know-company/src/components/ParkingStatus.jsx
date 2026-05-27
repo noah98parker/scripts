@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { computeTowRisk } from '../services/parkingRules';
+import SignDecoder from './SignDecoder';
 import styles from './ParkingStatus.module.css';
 
 const STATUS_CONFIG = {
@@ -75,27 +78,31 @@ const STATUS_CONFIG = {
   },
 };
 
-export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isPin }) {
+export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isPin, towCompanies = [] }) {
+  const [showDecoder, setShowDecoder] = useState(false);
+
   if (!verdict) {
     return (
       <div className={styles.empty}>
         <div className={styles.emptyIcon}>🗺️</div>
         <p>Move the map or tap a location to check parking rules.</p>
+        <button className={styles.decoderPrompt} onClick={() => setShowDecoder(v => !v)}>
+          📸 Already parked? Decode the sign instead
+        </button>
+        {showDecoder && <div className={styles.decoderInline}><SignDecoder /></div>}
       </div>
     );
   }
 
-  const cfg = STATUS_CONFIG[verdict.status] || STATUS_CONFIG.unknown;
+  const cfg = STATUS_CONFIG[verdict?.status] || STATUS_CONFIG.unknown;
+  const towRisk = computeTowRisk(verdict, towCompanies, queryLocation);
 
   return (
     <div className={styles.panel}>
-      {/* Big verdict card */}
+      {/* ── Big verdict card ── */}
       <div
         className={styles.verdictCard}
-        style={{
-          background: cfg.bg,
-          borderColor: cfg.border,
-        }}
+        style={{ background: cfg.bg, borderColor: cfg.border }}
       >
         <div className={styles.verdictEmoji}>{cfg.emoji}</div>
         <div className={styles.verdictAnswer} style={{ color: cfg.textColor }}>{cfg.answer}</div>
@@ -107,7 +114,43 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         {isPin && <div className={styles.pinNote}>📍 Checking clicked location</div>}
       </div>
 
-      {/* Location info */}
+      {/* ── Tow Risk Score ── */}
+      <div className={styles.towRiskCard} style={{ background: towRisk.bg, borderColor: towRisk.color }}>
+        <div className={styles.towRiskHeader}>
+          <span className={styles.towRiskEmoji}>{towRisk.emoji}</span>
+          <div className={styles.towRiskTitle}>Tow Risk</div>
+          <div className={styles.towRiskBadge} style={{ background: towRisk.color }}>
+            {towRisk.level}
+          </div>
+        </div>
+        {towRisk.factors.length > 0 && (
+          <ul className={styles.towRiskFactors}>
+            {towRisk.factors.map((f, i) => (
+              <li key={i}>{f}</li>
+            ))}
+          </ul>
+        )}
+        {verdict.stateLaw?.towWarning && (
+          <div className={styles.towRiskLaw}>
+            ⚖️ {verdict.stateLaw.towWarning}
+          </div>
+        )}
+      </div>
+
+      {/* ── Sign Decoder toggle ── */}
+      <button
+        className={styles.decoderToggleBtn}
+        onClick={() => setShowDecoder(v => !v)}
+      >
+        📸 {showDecoder ? 'Hide' : 'Decode a parking sign →'}
+      </button>
+      {showDecoder && (
+        <div className={styles.decoderInline}>
+          <SignDecoder />
+        </div>
+      )}
+
+      {/* ── Location info ── */}
       {geocodeInfo?.city && (
         <div className={styles.locationInfo}>
           <span className={styles.locationIcon}>📍</span>
@@ -122,13 +165,13 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* Data source */}
+      {/* ── Data source ── */}
       <div className={styles.sourceRow}>
         <span className={styles.sourceLabel}>Data Source</span>
         <span className={styles.sourceValue}>{verdict.source}</span>
       </div>
 
-      {/* Note / advisory */}
+      {/* ── Note / advisory ── */}
       {verdict.note && (
         <div className={styles.noteCard}>
           <div className={styles.noteTitle}>📋 Local Advisory</div>
@@ -136,15 +179,7 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* Tow risk */}
-      {verdict.stateLaw?.towWarning && (
-        <div className={styles.towCard}>
-          <div className={styles.towTitle}>🚛 Tow Risk</div>
-          <div className={styles.towText}>{verdict.stateLaw.towWarning}</div>
-        </div>
-      )}
-
-      {/* Overnight info */}
+      {/* ── Overnight info ── */}
       {verdict.stateLaw?.overnight && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🌙</span>
@@ -155,7 +190,7 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* Street cleaning */}
+      {/* ── Street cleaning ── */}
       {verdict.stateLaw?.streetCleaning && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🧹</span>
@@ -166,7 +201,7 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
         </div>
       )}
 
-      {/* Permit zones */}
+      {/* ── Permit zones ── */}
       {verdict.stateLaw?.permitZones && (
         <div className={styles.infoRow}>
           <span className={styles.infoIcon}>🪧</span>
