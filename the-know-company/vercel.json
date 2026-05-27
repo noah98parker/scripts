@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/parking-rates.js":  { "maxDuration": 30 },
+    "api/parking-search.js": { "maxDuration": 30 },
+    "api/decode-sign.js":    { "maxDuration": 30 },
+    "api/places.js":         { "maxDuration": 15 }
+  }
+}

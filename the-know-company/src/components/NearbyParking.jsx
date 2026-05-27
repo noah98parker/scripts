@@ -102,13 +102,14 @@ function RatesDisplay({ garageId, website, name, garage, geocodeInfo }) {
   if (d && d.found_rates) {
     return (
       <div className={styles.ratesRow}>
-        {d.hourly && <span className={styles.rateChip}>💵 {d.hourly}</span>}
-        {d.daily_max && <span className={styles.rateChip}>🅿️ {d.daily_max}</span>}
-        {d.evening && <span className={styles.rateEveningChip}>🌙 {d.evening}</span>}
-        {d.weekend && <span className={styles.rateEveningChip}>📅 {d.weekend}</span>}
-        {d.monthly && <span className={styles.rateChip}>📆 {d.monthly}</span>}
+        {d.hourly     && <span className={styles.rateChip}>💵 {d.hourly}</span>}
+        {d.daily_max  && <span className={styles.rateChip}>📅 {d.daily_max}</span>}
+        {d.early_bird && <span className={styles.rateChip}>🌅 {d.early_bird}</span>}
+        {d.evening    && <span className={styles.rateEveningChip}>🌙 {d.evening}</span>}
+        {d.weekend    && <span className={styles.rateEveningChip}>📆 {d.weekend}</span>}
+        {d.monthly    && <span className={styles.rateChip}>🗓️ {d.monthly}</span>}
         {d.validation && <span className={styles.rateChip}>✅ {d.validation}</span>}
-        {d.notes && <span className={styles.rateFallback}>{d.notes}</span>}
+        {d.notes      && <span className={styles.rateFallback}>{d.notes}</span>}
       </div>
     );
   }
