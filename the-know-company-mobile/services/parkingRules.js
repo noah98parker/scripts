@@ -730,3 +730,65 @@ export function estimateRate(parkingFeature, city) {
   const { hourly, daily } = rates[tier];
   return { hourly, daily, tier };
 }
+
+// ---------------------------------------------------------------------------
+// computeTowRisk: score 1-10 for how likely a tow is at this location
+// ---------------------------------------------------------------------------
+export function computeTowRisk(verdict, towCompanies = [], queryLocation = null) {
+  const factors = [];
+  let score = 0;
+  const status = verdict?.status;
+
+  // Private lot — immediate tow, no notice
+  if (verdict?.towImmediate || (verdict?.isLot && status === 'no_parking')) {
+    score += 10;
+    factors.push('Private lot — unauthorized vehicles towed immediately');
+  } else if (status === 'no_parking' || status === 'no_stopping' || status === 'no_standing') {
+    score += 8;
+    factors.push('Posted no-parking zone');
+  } else if (status === 'permit') {
+    score += verdict?.isLot ? 7 : 6;
+    factors.push(verdict?.isLot ? 'Customers-only lot — non-customer vehicles towed' : 'Permit-only zone');
+  } else if (status === 'time_limited') {
+    score += 4;
+    factors.push(verdict?.isLot ? `Lot time limit: ${verdict.maxstay || 'check signs'}` : 'Time-restricted street');
+  } else if (status === 'metered') {
+    score += verdict?.isLot ? 5 : 3;
+    factors.push(verdict?.isLot ? 'Paid lot — unpaid vehicles towed' : 'Metered zone — overstay risk');
+  } else if (status === 'allowed') {
+    score += 1;
+  } else {
+    score += 5;
+    factors.push('Parking rules unclear — check posted signs');
+  }
+
+  // Tow company density within 2 km
+  const nearbyCount = (queryLocation && towCompanies.length > 0)
+    ? towCompanies.filter(c => {
+        const cLat = c.lat ?? c.latitude;
+        const cLon = c.lon ?? c.longitude;
+        if (!cLat || !cLon) return false;
+        const dLat = (cLat - queryLocation.latitude) * 111320;
+        const dLon = (cLon - queryLocation.longitude) * 111320 * Math.cos(queryLocation.latitude * Math.PI / 180);
+        return Math.sqrt(dLat * dLat + dLon * dLon) < 2000;
+      }).length
+    : Math.min(towCompanies.length, 10);
+
+  if (nearbyCount >= 5) {
+    score += 2;
+    factors.push(`${nearbyCount} tow companies within 2 km — high-patrol area`);
+  } else if (nearbyCount >= 2) {
+    score += 1;
+    factors.push(`${nearbyCount} tow companies nearby`);
+  }
+
+  if (verdict?.stateLaw?.streetCleaning) {
+    score += 1;
+    factors.push('Street cleaning enforced in this state');
+  }
+
+  const clamped = Math.min(10, Math.max(1, score));
+  if (clamped >= 7) return { level: 'High',   score: clamped, color: '#dc2626', bg: '#fee2e2', emoji: '🔴', factors };
+  if (clamped >= 4) return { level: 'Medium', score: clamped, color: '#d97706', bg: '#fef3c7', emoji: '🟡', factors };
+  return              { level: 'Low',    score: clamped, color: '#059669', bg: '#d1fae5', emoji: '🟢', factors };
+}
