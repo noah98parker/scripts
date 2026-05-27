@@ -258,7 +258,7 @@ export default function App() {
                 )}
                 {activeTab === 'parking' && (
                   <NearbyParking
-                    garages={nearbyParking}
+                    garages={enrichedGarages}
                     cityMeters={cityMeters}
                     userLocation={queryLocation}
                     geocodeInfo={geocodeInfo}
