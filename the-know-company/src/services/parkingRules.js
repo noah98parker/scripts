@@ -141,6 +141,11 @@ export function computeVerdict(osmElements, stateCode, cityName) {
   };
 }
 
+// Full-name → 2-letter code lookup (fallback when ISO field is missing)
+const STATE_NAME_TO_CODE = Object.fromEntries(
+  Object.entries(STATE_LAWS).map(([code, law]) => [law.name.toLowerCase(), code])
+);
+
 /**
  * Reverse geocode via Nominatim (free OSM geocoder) to get state code + city.
  */
@@ -150,7 +155,22 @@ export async function reverseGeocode(lat, lon) {
   if (!res.ok) return { stateCode: null, city: null, display: null };
   const data = await res.json();
   const addr = data.address || {};
-  const stateCode = addr.ISO3166_2_lvl4?.replace('US-', '') || null;
+
+  // Nominatim uses hyphens in field name: "ISO3166-2-lvl4" (e.g. "US-NY")
+  // Bracket notation required — dot notation with underscores won't find it.
+  const isoField = addr['ISO3166-2-lvl4'] || addr['ISO3166_2_lvl4'] || null;
+  let stateCode = isoField?.replace('US-', '') || null;
+
+  // Fallback 1: 2-letter state abbreviation in addr.state
+  if (!stateCode && addr.state?.length === 2) {
+    stateCode = addr.state.toUpperCase();
+  }
+
+  // Fallback 2: match full state name against our law DB (e.g. "New York" → "NY")
+  if (!stateCode && addr.state) {
+    stateCode = STATE_NAME_TO_CODE[addr.state.toLowerCase()] || null;
+  }
+
   const city = addr.city || addr.town || addr.village || addr.suburb || null;
   return { stateCode, city, display: data.display_name, country: addr.country_code?.toUpperCase() };
 }
