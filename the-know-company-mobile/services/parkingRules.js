@@ -471,6 +471,162 @@ const STATE_NAME_TO_CODE = {
   wyoming: 'WY',
 };
 
+// City-level parking notes keyed by state code → lowercase city name.
+// All fields are optional — missing fields fall back to the parent STATE_LAWS entry.
+export const CITY_LAWS = {
+  FL: {
+    'st. petersburg': {
+      notes: 'Downtown meters operate 8am–8pm Mon–Sat (free evenings & Sundays). 2h limit on residential streets near downtown. Event parking bans near Tropicana Field & the Mahaffey Theater on game/show nights. Private lots along Central Ave are aggressively enforced — watch for signs.',
+      overnight: 'Generally allowed on public streets unless posted',
+      towWarning: 'Private lots near event venues tow immediately; public streets require 24h notice',
+    },
+    'st pete beach': {
+      notes: 'Beach-access parking restricted. Many lots require payment or a city sticker. On-street parking near the beach is limited and time-restricted (typically 2h).',
+      overnight: 'Beach-side overnight parking prohibited in most zones',
+      towWarning: 'Immediate tow in beach no-parking zones',
+    },
+    'clearwater': {
+      notes: 'Clearwater Beach lots fill quickly on weekends. Downtown meters 9am–9pm. Residential streets near the beach have 2h limits. Beachfront strip has no free parking.',
+      overnight: 'No overnight parking at the beach or in many downtown lots',
+      towWarning: 'Clearwater Beach lots tow without notice after hours',
+    },
+    'tampa': {
+      notes: 'Downtown has meters and pay lots. Ybor City: aggressive private lot enforcement Fri–Sun nights. Water Street/Channelside: paid garages only. Busch Gardens area lots are private — check signs.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Private lots in Ybor City and Water Street tow immediately',
+    },
+    'miami': {
+      notes: 'Brickell and downtown have meters (7am–10pm). Wynwood: lots are private and tow-happy. Little Havana: mostly free street parking. Coral Gables enforces permit zones strictly.',
+      overnight: 'Generally allowed on public streets unless posted',
+      towWarning: 'Private lots in Wynwood tow immediately; 24h notice on public streets',
+    },
+    'miami beach': {
+      notes: 'South Beach: meters operate until 3am. No overnight beach parking. Ocean Drive and Collins Ave enforce 1h limits in peak hours. City parking garages available on 7th/12th/17th St.',
+      overnight: 'No overnight parking on beach or beachfront lots',
+      towWarning: 'Immediate tow in cleaning zones and beach lots after hours',
+    },
+    'orlando': {
+      notes: 'Downtown: 2h limit on most meters 8am–5pm Mon–Fri. Mills 50 and Thornton Park have popular free streets but fill up. Theme park areas (I-Drive, US 192) are private lots only — no free street parking.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Private lots near I-Drive and convention center tow immediately',
+    },
+    'fort lauderdale': {
+      notes: 'Las Olas Blvd: 2h meters 8am–8pm. Beach parking meters run 7am–9pm. Flagler Village and Riverwalk have paid lots. Street parking in downtown fills by 7pm on weekends.',
+      overnight: 'No overnight beach parking (posted zones)',
+      towWarning: 'Beach lot enforcement immediate; downtown private lots tow after posted hours',
+    },
+    'jacksonville': {
+      notes: 'Downtown has paid meters and garages. San Marco and Riverside have free street parking with 2h limits near businesses. Sports/event areas (TIAA Bank Field) restrict public parking on event days.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: '24h notice required on public streets; private lots vary',
+    },
+    'sarasota': {
+      notes: 'Downtown/Main Street: paid meters 8am–10pm. St. Armands Circle: 2h limit strictly enforced. Siesta Key beach lots fill early — arrive before 10am on summer weekends.',
+      overnight: 'Generally allowed unless posted near beach areas',
+      towWarning: 'Private Siesta Key lots tow immediately; public streets require 24h notice',
+    },
+  },
+
+  CA: {
+    'los angeles': {
+      notes: 'Alternate-side street cleaning enforced with tickets and towing. Most residential streets: 2h 8am–6pm unless permit. Downtown has meters until 8pm. 72h max on any public street (CVC 22651k).',
+      overnight: 'Allowed unless street-cleaning hours posted; check signs every block',
+      towWarning: 'Immediate tow during cleaning window; 72h law strictly enforced citywide',
+    },
+    'san francisco': {
+      notes: 'Street cleaning 1–3x/week, hours vary by block — check posted signs. 2h limit in most commercial areas. Meters run 9am–6pm (some until 8pm on commercial corridors). Residential permit zones (RPP) are citywide.',
+      overnight: 'Allowed on most streets; check for 72h rule and cleaning schedules',
+      towWarning: 'Immediate tow during cleaning window; SFMTA enforces aggressively',
+    },
+    'san diego': {
+      notes: 'Downtown: meters 8am–8pm. Mission Beach and Pacific Beach: 2h limits near boardwalk. La Jolla: paid meters enforced strictly. 72h statewide rule applies.',
+      overnight: 'Generally allowed unless posted; beach zones often restricted',
+      towWarning: 'Immediate tow during cleaning; beach zone enforcement immediate',
+    },
+    'santa monica': {
+      notes: 'Downtown meters run until midnight. Main Street and Third Street Promenade: 2h limits. Beach lots charge daily rates. 2h residential limits strictly enforced near the promenade.',
+      overnight: 'No overnight beach parking; residential streets have RPP zones',
+      towWarning: 'Immediate tow in beach lots after hours and during cleaning',
+    },
+  },
+
+  NY: {
+    'new york city': {
+      notes: 'Alternate-side parking 1–5x/week depending on block — check posted signs. Meters run 7am–7pm (some blocks until 10pm). Suspended on major holidays only. Hydrants: 15ft rule enforced. Garages fill quickly during events.',
+      overnight: 'Allowed but alternate-side rules apply — check next-morning sign',
+      towWarning: 'Immediate tow during cleaning window; $65–$115 ticket + $185+ tow fee',
+    },
+    'brooklyn': {
+      notes: 'Alternate-side varies by neighborhood — check individual block signs. Park Slope, Williamsburg, DUMBO have 2h metered zones. Many residential blocks have alternate-side Mon or Thu mornings.',
+      overnight: 'Allowed; check morning alternate-side schedule before sleeping',
+      towWarning: 'Towed vehicles go to Brooklyn Navy Yard pound — $185+ fee',
+    },
+    'queens': {
+      notes: 'Alternate-side cleaning 1–2x/week. Flushing and Jamaica have busy metered areas. Airport vicinity (JFK/LGA): no street parking; use economy lots.',
+      overnight: 'Generally allowed on residential streets',
+      towWarning: 'Tows go to Queens pound at College Point — $185+ fee',
+    },
+  },
+
+  IL: {
+    'chicago': {
+      notes: 'Alternate-side street cleaning strictly enforced Apr–Nov. City sticker required or $200 fine. Meters run by city contract — rates vary $2–$7/hr. Snow routes: immediate tow when declared.',
+      overnight: 'Allowed; check for snow emergency and cleaning signs',
+      towWarning: 'Immediate tow during cleaning events and snow emergencies; $150–$500 fee',
+    },
+  },
+
+  TX: {
+    'austin': {
+      notes: '6th Street entertainment district: reserved parking lots, very few free spots. Downtown meters until 10pm. South Congress and East Austin: 2h limits on busy corridors. Private lot towing is common near UT campus.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Private lots near UT and 6th Street tow immediately',
+    },
+    'houston': {
+      notes: 'Montrose, Midtown, Downtown: paid meters or garages. Galleria area: mostly private lots. Medical Center: dedicated garages only, no free street parking nearby.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Private lots throughout city tow immediately; 24h notice on public',
+    },
+    'dallas': {
+      notes: 'Deep Ellum: private lots are common and tow-happy on event nights. Uptown: meters until 10pm. Greenville Ave: 2h street parking near restaurants. Downtown has paid garages.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Deep Ellum private lots tow immediately on event nights',
+    },
+  },
+
+  WA: {
+    'seattle': {
+      notes: '72h continuous parking limit enforced citywide. Street cleaning varies by block. Capitol Hill, Belltown, South Lake Union: pay stations 8am–10pm. Residential permit zones (RPZ) most neighborhoods.',
+      overnight: 'Allowed but 72h limit applies everywhere; RPZ permit needed in some areas',
+      towWarning: 'Immediate tow after 72h; cleaning zones tow same day',
+    },
+  },
+
+  MA: {
+    'boston': {
+      notes: 'Resident sticker required overnight (7pm–8am most areas). Street cleaning enforced strictly with immediate tow. Back Bay and South End: meters until 8pm. Fenway area: event parking restrictions on game days.',
+      overnight: 'Requires resident permit in most neighborhoods — visitors risk ticket/tow',
+      towWarning: 'Immediate tow during cleaning; non-resident overnight tow risk is high',
+    },
+  },
+
+  GA: {
+    'atlanta': {
+      notes: 'Midtown and Buckhead: meters and private lots. Beltline neighborhoods (Old Fourth Ward, Reynoldstown): 2h limits near restaurants. Downtown: mostly paid garages. Street parking sparse near Mercedes-Benz Stadium on event days.',
+      overnight: 'Generally allowed on public streets',
+      towWarning: 'Private lots near stadiums and Buckhead bars tow immediately',
+    },
+  },
+
+  CO: {
+    'denver': {
+      notes: 'Downtown meters 7am–10pm. LoHi, RiNo, Colfax: paid stations with 2h limits. Snow emergency routes: move your car within 24h of declaration. Residential permit zones (RPP) near downtown.',
+      overnight: 'Generally allowed; watch for snow emergency routes in winter',
+      towWarning: 'Tow during snow emergencies; 1h grace in time-limit zones',
+    },
+  },
+};
+
 function deriveStateCode(stateName, countryCode) {
   if (!stateName) return null;
   if (countryCode && countryCode.toLowerCase() !== 'us') return null;
@@ -502,6 +658,11 @@ export function computeVerdict(osmElements, stateCode, cityName) {
   const tags = collectTags(osmElements);
   const stateLaw = stateCode ? STATE_LAWS[stateCode] || null : null;
 
+  // City-specific override
+  const cityKey = cityName?.toLowerCase().trim() || '';
+  const cityLaw = stateCode ? (CITY_LAWS[stateCode] || {})[cityKey] || null : null;
+  const effectiveLaw = (stateLaw && cityLaw) ? { ...stateLaw, ...cityLaw } : stateLaw;
+
   // --- Explicit prohibitions ---
   if (tags['no_parking'] === 'yes' || tags.amenity === 'no_parking') {
     return {
@@ -510,7 +671,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#E53E3E',
       icon: 'ban',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'This area is marked as no parking.',
     };
@@ -531,7 +692,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#C53030',
       icon: 'minus-circle',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'No stopping allowed in this lane.',
     };
@@ -548,7 +709,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#DD6B20',
       icon: 'alert-triangle',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'No standing allowed — passengers may be dropped off only.',
     };
@@ -561,7 +722,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#E53E3E',
       icon: 'lock',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'This area is private or restricted access.',
     };
@@ -581,7 +742,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#805AD5',
       icon: 'key',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'A residential or special permit is required to park here.',
     };
@@ -602,7 +763,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#D69E2E',
       icon: 'clock',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: 'Pay-to-park meter zone.',
     };
@@ -621,7 +782,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#ECC94B',
       icon: 'clock',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       maxstay: maxstay || null,
       note: maxstay
@@ -650,7 +811,7 @@ export function computeVerdict(osmElements, stateCode, cityName) {
       color: '#38A169',
       icon: 'check-circle',
       source: 'osm',
-      stateLaw,
+      stateLaw: effectiveLaw,
       cityName,
       note: openingHours
         ? `Parking appears allowed. Hours: ${openingHours}. Verify posted signs.`
@@ -658,20 +819,23 @@ export function computeVerdict(osmElements, stateCode, cityName) {
     };
   }
 
-  // --- State-law advisory when no OSM data ---
-  if (stateLaw) {
-    const hasRestrictions = stateLaw.streetCleaning || stateLaw.permitZones;
+  // --- City/State-law advisory when no OSM data ---
+  if (effectiveLaw) {
+    const hasRestrictions = effectiveLaw.streetCleaning || effectiveLaw.permitZones;
+    // If we have a city-specific note, always show it; otherwise fall back to state note
+    const note = cityLaw?.notes
+      || (hasRestrictions
+        ? `${effectiveLaw.name} has street cleaning or permit zones. Verify posted signs carefully. ${effectiveLaw.towWarning}`
+        : `No specific restrictions found via map data. ${effectiveLaw.notes}`);
     return {
       status: 'advisory',
       label: hasRestrictions ? 'Check Posted Signs' : 'Likely Allowed',
       color: hasRestrictions ? '#ECC94B' : '#68D391',
       icon: hasRestrictions ? 'alert-circle' : 'info',
-      source: 'state_law',
-      stateLaw,
+      source: cityLaw ? 'City Parking Database' : 'State Law Database',
+      stateLaw: effectiveLaw,
       cityName,
-      note: hasRestrictions
-        ? `${stateLaw.name} has street cleaning or permit zones. Verify posted signs carefully. ${stateLaw.towWarning}`
-        : `No specific restrictions found via map data. ${stateLaw.notes}`,
+      note,
     };
   }
 
