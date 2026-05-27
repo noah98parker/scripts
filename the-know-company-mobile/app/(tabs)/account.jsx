@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  TextInput,
   Switch,
   ScrollView,
   Alert,
@@ -14,7 +13,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../stores/authStore';
 import { useParkingStore } from '../../stores/parkingStore';
@@ -83,7 +81,7 @@ function FavoriteItem({ item, onNavigate, onDelete }) {
   );
 }
 
-function SettingsSection({ useCityData, setUseCityData, timerWarning, setTimerWarning, defaultDuration, setDefaultDuration, googleKey, setGoogleKey, onSaveKey }) {
+function SettingsSection({ useCityData, setUseCityData, timerWarning, setTimerWarning, defaultDuration, setDefaultDuration }) {
   return (
     <View style={styles.settingsSection}>
       <Text style={styles.sectionTitle}>⚙️ Settings</Text>
@@ -141,27 +139,6 @@ function SettingsSection({ useCityData, setUseCityData, timerWarning, setTimerWa
         </View>
       </View>
 
-      {/* Google Places API Key */}
-      <View style={styles.settingBlock}>
-        <Text style={styles.settingLabel}>Google Places API Key</Text>
-        <Text style={styles.settingDescription}>Optional — enables richer garage data</Text>
-        <View style={styles.keyInputRow}>
-          <TextInput
-            style={styles.keyInput}
-            placeholder="AIza..."
-            placeholderTextColor={colors.gray400}
-            value={googleKey}
-            onChangeText={setGoogleKey}
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry
-          />
-          <TouchableOpacity style={styles.saveKeyButton} onPress={onSaveKey} activeOpacity={0.8}>
-            <Text style={styles.saveKeyButtonText}>Save</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <View style={styles.versionRow}>
         <Ionicons name="car" size={14} color={colors.gray400} />
         <Text style={styles.versionText}>The Know Company v1.0.0</Text>
@@ -180,26 +157,6 @@ export default function AccountScreen() {
     timerWarningMinutes, setTimerWarningMinutes,
     defaultDurationMinutes, setDefaultDurationMinutes,
   } = useSettingsStore();
-
-  const [googleKey, setGoogleKey] = useState('');
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const key = await SecureStore.getItemAsync('google_places_key');
-        if (key) setGoogleKey(key);
-      } catch {}
-    })();
-  }, []);
-
-  const handleSaveKey = async () => {
-    try {
-      await SecureStore.setItemAsync('google_places_key', googleKey.trim());
-      Alert.alert('Saved', 'Google Places API key saved securely.');
-    } catch {
-      Alert.alert('Error', 'Could not save the API key.');
-    }
-  };
 
   const handleLogout = async () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -235,9 +192,6 @@ export default function AccountScreen() {
     setTimerWarning: setTimerWarningMinutes,
     defaultDuration: defaultDurationMinutes,
     setDefaultDuration: setDefaultDurationMinutes,
-    googleKey,
-    setGoogleKey,
-    onSaveKey: handleSaveKey,
   };
 
   if (!isAuthenticated) {

@@ -13,7 +13,7 @@ import styles from './styles/App.module.css';
 import { fetchNearbyParking, fetchNearbyTowCompanies, fetchParkingRestrictions, distanceM } from './services/overpass';
 import { computeVerdict, reverseGeocode } from './services/parkingRules';
 import { requestPermission, notifyParkingStatus } from './services/notifications';
-import { fetchGooglePlacesParking, getGoogleApiKey } from './services/googlePlaces';
+import { fetchGooglePlacesParking } from './services/googlePlaces';
 import { fetchCityParkingData } from './services/cityOpenData';
 
 const DEFAULT_LOCATION = { lat: 40.7580, lon: -73.9855 }; // Times Square, NYC
@@ -100,14 +100,12 @@ export default function App() {
 
     setDataLoading(true);
     try {
-      const hasGoogleKey = !!getGoogleApiKey();
-
       const [geoInfo, restrictionData, osmParkingData, googleParkingData, cityData, towData] =
         await Promise.allSettled([
           reverseGeocode(loc.lat, loc.lon),
           fetchParkingRestrictions(loc.lat, loc.lon),
           fetchNearbyParking(loc.lat, loc.lon, 1000),
-          hasGoogleKey ? fetchGooglePlacesParking(loc.lat, loc.lon, 1000) : Promise.resolve([]),
+          fetchGooglePlacesParking(loc.lat, loc.lon, 1000),
           fetchCityParkingData(loc.lat, loc.lon, 250),
           fetchNearbyTowCompanies(loc.lat, loc.lon, 5000),
         ]);

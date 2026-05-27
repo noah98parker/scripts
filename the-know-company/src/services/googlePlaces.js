@@ -1,64 +1,7 @@
 /**
- * Google Places API service
- * Nearby Search for parking garages/lots.
- * Requires a Google Places API key (stored in localStorage by the user).
+ * Google Places service — calls the server-side Vercel proxy (/api/places).
+ * The API key never touches the browser; it lives in Vercel environment variables.
  */
-
-const BASE = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
-
-export function getGoogleApiKey() {
-  // 1. User-entered key takes priority (set via ⚙️ Settings modal)
-  // 2. Falls back to build-time env var (set in Vercel → Environment Variables as VITE_GOOGLE_PLACES_KEY)
-  return localStorage.getItem('tkc_google_places_key')
-    || import.meta.env.VITE_GOOGLE_PLACES_KEY
-    || '';
-}
-
-export function setGoogleApiKey(key) {
-  localStorage.setItem('tkc_google_places_key', key);
-}
-
-/**
- * Fetch nearby parking from Google Places.
- * Returns an array normalised to the same shape as Overpass results.
- */
-export async function fetchGooglePlacesParking(lat, lon, radiusM = 1000) {
-  const key = getGoogleApiKey();
-  if (!key) return [];
-
-  // Google Places Nearby Search must be proxied in production due to CORS;
-  // for development / local use we call directly (key must have no HTTP restrictions).
-  const url = `${BASE}?location=${lat},${lon}&radius=${radiusM}&type=parking&key=${key}`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Google Places error ${res.status}`);
-  const data = await res.json();
-
-  if (data.status === 'REQUEST_DENIED') {
-    console.warn('Google Places: REQUEST_DENIED —', data.error_message);
-    return [];
-  }
-
-  return (data.results || []).map(p => ({
-    id: `gp_${p.place_id}`,
-    name: p.name,
-    type: inferType(p),
-    lat: p.geometry.location.lat,
-    lon: p.geometry.location.lng,
-    fee: 'unknown',         // Places API doesn't expose price reliably
-    capacity: null,
-    opening_hours: p.opening_hours?.open_now != null
-      ? (p.opening_hours.open_now ? 'Open now' : 'Closed now')
-      : null,
-    operator: null,
-    rating: p.rating || null,
-    user_ratings_total: p.user_ratings_total || 0,
-    source: 'google',
-    place_id: p.place_id,
-    vicinity: p.vicinity || null,
-    tags: {},
-  }));
-}
 
 function inferType(place) {
   const types = place.types || [];
@@ -67,17 +10,65 @@ function inferType(place) {
 }
 
 /**
- * Fetch full Place Details (hours, price level, phone, website) for a single place_id.
+ * Fetch nearby parking from Google Places (via server proxy).
+ * Returns [] gracefully if the server has no key configured.
+ */
+export async function fetchGooglePlacesParking(lat, lon, radiusM = 1000) {
+  try {
+    const res = await fetch(`/api/places?action=nearby&lat=${lat}&lon=${lon}&radius=${radiusM}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    if (!data.results?.length) return [];
+
+    return data.results.map(p => ({
+      id: `gp_${p.place_id}`,
+      name: p.name,
+      type: inferType(p),
+      lat: p.geometry.location.lat,
+      lon: p.geometry.location.lng,
+      fee: 'unknown',
+      capacity: null,
+      opening_hours: p.opening_hours?.open_now != null
+        ? (p.opening_hours.open_now ? 'Open now' : 'Closed now')
+        : null,
+      operator: null,
+      rating: p.rating || null,
+      user_ratings_total: p.user_ratings_total || 0,
+      source: 'google',
+      place_id: p.place_id,
+      vicinity: p.vicinity || null,
+      tags: {},
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch full Place Details for a single place_id (via server proxy).
  */
 export async function fetchPlaceDetails(placeId) {
-  const key = getGoogleApiKey();
-  if (!key) return null;
+  try {
+    const res = await fetch(`/api/places?action=details&placeId=${encodeURIComponent(placeId)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.result) return null;
 
-  const fields = 'name,formatted_address,formatted_phone_number,website,opening_hours,price_level,rating,user_ratings_total,geometry';
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${key}`;
-
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.result || null;
+    const r = data.result;
+    return {
+      formatted_address: r.formatted_address || null,
+      formatted_phone_number: r.formatted_phone_number || null,
+      website: r.website || null,
+      opening_hours: r.opening_hours?.weekday_text
+        ? r.opening_hours.weekday_text.join(', ')
+        : r.opening_hours?.open_now != null
+        ? (r.opening_hours.open_now ? 'Open now' : 'Closed now')
+        : null,
+      price_level: r.price_level ?? null,
+      rating: r.rating ?? null,
+    };
+  } catch {
+    return null;
+  }
 }
