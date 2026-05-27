@@ -294,3 +294,189 @@
 .directionsBtn:hover {
   background: var(--brand-primary-dark);
 }
+
+/* ── Enriched garage card (Google Places data) ── */
+.garageCard {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s;
+}
+
+.garageCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.garageTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 14px 8px;
+}
+
+.garageIcon {
+  font-size: 26px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.garageInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.garageNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.garageName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garageMeta {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.garageDistBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: var(--blue-light);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+
+.garageStatusBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+
+.garageStatusOpen {
+  color: #059669;
+  background: #d1fae5;
+}
+
+.garageStatusClosed {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.garageAddress {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garageRatingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.garageRatingCount {
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+/* ── Rates row ── */
+.ratesRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 14px 10px;
+}
+
+.rateChip {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: var(--blue-light);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.rateEveningChip {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #ede9fe;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+.rateFallback {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.ratesLoading {
+  font-size: 12px;
+  color: var(--gray-400);
+  padding: 0 14px 10px;
+  font-style: italic;
+}
+
+/* ── Action buttons row ── */
+.garageActions {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--gray-100);
+}
+
+.garageActionBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.1s;
+}
+
+.garageActionBtn:hover {
+  background: var(--blue-light);
+}
+
+.garageActionBtn + .garageActionBtn {
+  border-left: 1px solid var(--gray-100);
+}
+
+.garageActionBtnPhone {
+  color: #059669;
+}
+
+.garageActionBtnPhone:hover {
+  background: #d1fae5;
+}

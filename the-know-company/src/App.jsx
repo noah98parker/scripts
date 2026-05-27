@@ -41,6 +41,7 @@ export default function App() {
   const [verdict, setVerdict]         = useState(null);
   const [geocodeInfo, setGeocodeInfo] = useState(null);
   const [nearbyParking, setNearbyParking] = useState([]);
+  const [enrichedGarages, setEnrichedGarages] = useState([]);
   const [cityMeters, setCityMeters]     = useState([]);
   const [towCompanies, setTowCompanies] = useState([]);
 
@@ -99,8 +100,9 @@ export default function App() {
     lastFetchRef.current = key;
 
     setDataLoading(true);
+    setEnrichedGarages([]);
     try {
-      const [geoInfo, restrictionData, osmParkingData, googleParkingData, cityData, towData] =
+      const [geoInfo, restrictionData, osmParkingData, googleParkingData, cityData, towData, enrichedData] =
         await Promise.allSettled([
           reverseGeocode(loc.lat, loc.lon),
           fetchParkingRestrictions(loc.lat, loc.lon),
@@ -108,6 +110,7 @@ export default function App() {
           fetchGooglePlacesParking(loc.lat, loc.lon, 1000),
           fetchCityParkingData(loc.lat, loc.lon, 250),
           fetchNearbyTowCompanies(loc.lat, loc.lon, 5000),
+          fetch(`/api/parking-search?lat=${loc.lat}&lon=${loc.lon}&radius=1500`).then(r => r.json()),
         ]);
 
       const geo     = geoInfo.status          === 'fulfilled' ? geoInfo.value          : {};
@@ -116,6 +119,7 @@ export default function App() {
       const googleP = googleParkingData.status === 'fulfilled' ? googleParkingData.value : [];
       const city    = cityData.status         === 'fulfilled' ? cityData.value         : [];
       const tow     = towData.status          === 'fulfilled' ? towData.value          : [];
+      const enriched = enrichedData.status    === 'fulfilled' ? (enrichedData.value?.garages || []) : [];
 
       const mergedParking = mergeParking(osmP, googleP);
 
@@ -123,6 +127,7 @@ export default function App() {
       setNearbyParking(mergedParking);
       setCityMeters(city);
       setTowCompanies(tow);
+      setEnrichedGarages(enriched);
 
       const v = computeVerdict(restr, geo.stateCode, geo.city);
       setVerdict(v);
