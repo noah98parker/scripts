@@ -1,0 +1,142 @@
+.section {
+  background: var(--surface);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.confidenceBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 100px;
+  text-transform: capitalize;
+}
+
+/* ── Loading ── */
+.loading {
+  padding: 16px 14px;
+  font-size: 13px;
+  color: var(--gray-500);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.loadingSpinner {
+  animation: spin 1.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Street View image ── */
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--gray-100);
+  overflow: hidden;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.svImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.imageBadge {
+  position: absolute;
+  bottom: 6px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Summary sentence ── */
+.summary {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--gray-700);
+  line-height: 1.45;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+/* ── Restriction cards ── */
+.restrictionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.restrictionCard {
+  border: 1.5px solid;
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.restrictionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.restrictionType {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.restrictionText {
+  font-size: 13px;
+  color: var(--gray-800);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.restrictionMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gray-600);
+  margin-top: 2px;
+}
+
+/* ── No signs found ── */
+.noSigns {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--gray-400);
+  text-align: center;
+}
