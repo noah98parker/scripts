@@ -7,37 +7,52 @@ import StateLawPanel from './components/StateLawPanel';
 import Header from './components/Header';
 import LoadingOverlay from './components/LoadingOverlay';
 import NotificationBanner from './components/NotificationBanner';
+import SettingsModal from './components/SettingsModal';
 import styles from './styles/App.module.css';
+
 import { fetchNearbyParking, fetchNearbyTowCompanies, fetchParkingRestrictions, distanceM } from './services/overpass';
 import { computeVerdict, reverseGeocode } from './services/parkingRules';
 import { requestPermission, notifyParkingStatus } from './services/notifications';
+import { fetchGooglePlacesParking, getGoogleApiKey } from './services/googlePlaces';
+import { fetchCityParkingData } from './services/cityOpenData';
 
 const DEFAULT_LOCATION = { lat: 40.7580, lon: -73.9855 }; // Times Square, NYC
 
+/** Merge OSM + Google Places results, de-duplicating by proximity (50 m). */
+function mergeParking(osmResults, googleResults) {
+  const merged = [...osmResults];
+  for (const gp of googleResults) {
+    const duplicate = merged.some(
+      p => distanceM(p.lat, p.lon, gp.lat, gp.lon) < 50
+    );
+    if (!duplicate) merged.push(gp);
+  }
+  return merged;
+}
+
 export default function App() {
-  const [userLocation, setUserLocation] = useState(null);
-  const [mapCenter, setMapCenter] = useState(DEFAULT_LOCATION);
-  const [activePin, setActivePin] = useState(null); // user-clicked map location
+  const [userLocation, setUserLocation]   = useState(null);
+  const [mapCenter, setMapCenter]         = useState(DEFAULT_LOCATION);
+  const [activePin, setActivePin]         = useState(null);
 
   const [locationLoading, setLocationLoading] = useState(true);
-  const [dataLoading, setDataLoading] = useState(false);
+  const [dataLoading, setDataLoading]         = useState(false);
 
-  const [verdict, setVerdict] = useState(null);
+  const [verdict, setVerdict]         = useState(null);
   const [geocodeInfo, setGeocodeInfo] = useState(null);
-  const [restrictions, setRestrictions] = useState([]);
   const [nearbyParking, setNearbyParking] = useState([]);
+  const [cityMeters, setCityMeters]     = useState([]);
   const [towCompanies, setTowCompanies] = useState([]);
 
-  const [activeTab, setActiveTab] = useState('status'); // status | parking | tow | law
+  const [activeTab, setActiveTab]     = useState('status');
   const [notification, setNotification] = useState(null);
   const [notifPermission, setNotifPermission] = useState('default');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const lastFetchRef = useRef(null);
 
-  // ── Request notification permission on mount ──
-  useEffect(() => {
-    requestPermission().then(setNotifPermission);
-  }, []);
+  // ── Notification permission ──
+  useEffect(() => { requestPermission().then(setNotifPermission); }, []);
 
   // ── Geolocation ──
   useEffect(() => {
@@ -61,17 +76,12 @@ export default function App() {
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
-
-    // Watch position
     const watchId = navigator.geolocation.watchPosition(
       pos => {
         const loc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        setUserLocation(prev => {
-          if (!prev || distanceM(prev.lat, prev.lon, loc.lat, loc.lon) > 20) {
-            return loc;
-          }
-          return prev;
-        });
+        setUserLocation(prev =>
+          !prev || distanceM(prev.lat, prev.lon, loc.lat, loc.lon) > 20 ? loc : prev
+        );
       },
       () => {},
       { enableHighAccuracy: true }
@@ -79,7 +89,7 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // ── Fetch data when the query location changes ──
+  // ── Unified data fetch ──
   const queryLocation = activePin || userLocation;
 
   const fetchAllData = useCallback(async (loc) => {
@@ -90,38 +100,52 @@ export default function App() {
 
     setDataLoading(true);
     try {
-      const [geoInfo, restrictionData, parkingData, towData] = await Promise.allSettled([
-        reverseGeocode(loc.lat, loc.lon),
-        fetchParkingRestrictions(loc.lat, loc.lon),
-        fetchNearbyParking(loc.lat, loc.lon, 1000),
-        fetchNearbyTowCompanies(loc.lat, loc.lon, 5000),
-      ]);
+      const hasGoogleKey = !!getGoogleApiKey();
 
-      const geo = geoInfo.status === 'fulfilled' ? geoInfo.value : {};
-      const restr = restrictionData.status === 'fulfilled' ? restrictionData.value : [];
-      const parking = parkingData.status === 'fulfilled' ? parkingData.value : [];
-      const tow = towData.status === 'fulfilled' ? towData.value : [];
+      const [geoInfo, restrictionData, osmParkingData, googleParkingData, cityData, towData] =
+        await Promise.allSettled([
+          reverseGeocode(loc.lat, loc.lon),
+          fetchParkingRestrictions(loc.lat, loc.lon),
+          fetchNearbyParking(loc.lat, loc.lon, 1000),
+          hasGoogleKey ? fetchGooglePlacesParking(loc.lat, loc.lon, 1000) : Promise.resolve([]),
+          fetchCityParkingData(loc.lat, loc.lon, 250),
+          fetchNearbyTowCompanies(loc.lat, loc.lon, 5000),
+        ]);
+
+      const geo     = geoInfo.status          === 'fulfilled' ? geoInfo.value          : {};
+      const restr   = restrictionData.status  === 'fulfilled' ? restrictionData.value  : [];
+      const osmP    = osmParkingData.status   === 'fulfilled' ? osmParkingData.value   : [];
+      const googleP = googleParkingData.status === 'fulfilled' ? googleParkingData.value : [];
+      const city    = cityData.status         === 'fulfilled' ? cityData.value         : [];
+      const tow     = towData.status          === 'fulfilled' ? towData.value          : [];
+
+      const mergedParking = mergeParking(osmP, googleP);
 
       setGeocodeInfo(geo);
-      setRestrictions(restr);
-      setNearbyParking(parking);
+      setNearbyParking(mergedParking);
+      setCityMeters(city);
       setTowCompanies(tow);
 
       const v = computeVerdict(restr, geo.stateCode, geo.city);
       setVerdict(v);
-
-      // Push notification
       notifyParkingStatus(v);
 
-      // In-app notification
+      // In-app banner
       if (v.status === 'no_parking' || v.status === 'no_stopping') {
-        setNotification({ type: 'error', message: `🚫 No parking here! ${v.stateLaw?.towWarning || ''}` });
+        setNotification({ type: 'error',   message: `🚫 No parking here! ${v.stateLaw?.towWarning || ''}` });
       } else if (v.status === 'time_limited') {
         setNotification({ type: 'warning', message: `⏱️ Time-limited parking: ${v.maxstay || 'see signs'}` });
       } else if (v.status === 'permit') {
         setNotification({ type: 'warning', message: '🪧 Permit required. Check for resident-only signs.' });
       } else if (v.status === 'allowed') {
         setNotification({ type: 'success', message: '✅ Parking appears to be allowed here.' });
+      }
+
+      // City data badge
+      if (city.length > 0) {
+        setNotification(prev =>
+          prev ? prev : { type: 'info', message: `🏙️ ${city.length} city parking meter(s) found nearby` }
+        );
       }
     } catch (err) {
       console.error('Data fetch error:', err);
@@ -136,7 +160,7 @@ export default function App() {
 
   const handleMapClick = useCallback((latlng) => {
     setActivePin({ lat: latlng.lat, lon: latlng.lng });
-    lastFetchRef.current = null; // force refresh
+    lastFetchRef.current = null;
   }, []);
 
   const handleUseMyLocation = useCallback(() => {
@@ -144,13 +168,23 @@ export default function App() {
     lastFetchRef.current = null;
   }, []);
 
+  // After closing settings, force a re-fetch in case API key changed
+  const handleSettingsClose = useCallback(() => {
+    setSettingsOpen(false);
+    lastFetchRef.current = null;
+    if (queryLocation) fetchAllData(queryLocation);
+  }, [queryLocation, fetchAllData]);
+
   return (
     <div className={styles.app}>
       <Header
         notifPermission={notifPermission}
         onRequestNotif={() => requestPermission().then(setNotifPermission)}
         geocodeInfo={geocodeInfo}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
+
+      <SettingsModal isOpen={settingsOpen} onClose={handleSettingsClose} />
 
       {notification && (
         <NotificationBanner
@@ -167,6 +201,7 @@ export default function App() {
             mapCenter={mapCenter}
             activePin={activePin}
             nearbyParking={nearbyParking}
+            cityMeters={cityMeters}
             towCompanies={towCompanies}
             verdict={verdict}
             onMapClick={handleMapClick}
@@ -182,10 +217,10 @@ export default function App() {
         <div className={styles.sidebar}>
           <div className={styles.tabs}>
             {[
-              { key: 'status', label: '🅿️ Status' },
+              { key: 'status',  label: '🅿️ Status' },
               { key: 'parking', label: '🏢 Garages' },
-              { key: 'tow', label: '🚛 Tow Info' },
-              { key: 'law', label: '⚖️ Laws' },
+              { key: 'tow',     label: '🚛 Tow Info' },
+              { key: 'law',     label: '⚖️ Laws' },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -210,11 +245,13 @@ export default function App() {
                     geocodeInfo={geocodeInfo}
                     queryLocation={queryLocation}
                     isPin={!!activePin}
+                    cityMeters={cityMeters}
                   />
                 )}
                 {activeTab === 'parking' && (
                   <NearbyParking
                     garages={nearbyParking}
+                    cityMeters={cityMeters}
                     userLocation={queryLocation}
                     geocodeInfo={geocodeInfo}
                   />
