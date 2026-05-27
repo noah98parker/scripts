@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  Linking,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -62,6 +63,9 @@ export default function MapScreen() {
   const [decoding, setDecoding]             = useState(false);
   const [decoderResult, setDecoderResult]   = useState('');
   const [decoderError, setDecoderError]     = useState('');
+  const [enrichedGarages, setEnrichedGarages] = useState([]);
+  // garageRates: { [garageId]: { loading: bool, data: object|null } }
+  const [garageRates, setGarageRates]       = useState({});
 
   // ── Location tracking ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -92,10 +96,14 @@ export default function MapScreen() {
   const fetchDataForPin = useCallback(async (pin) => {
     setDataLoading(true);
     setTowRisk(null);
+    setEnrichedGarages([]);
+    setGarageRates({});
     try {
+      const apiBase = process.env.EXPO_PUBLIC_API_URL || '';
+
       const [
         restrictionRes, geoRes, osmParkingRes,
-        googleParkingRes, cityDataRes, towsRes,
+        googleParkingRes, cityDataRes, towsRes, enrichedRes,
       ] = await Promise.allSettled([
         fetchParkingRestrictions(pin.latitude, pin.longitude),
         reverseGeocode(pin.latitude, pin.longitude),
@@ -103,6 +111,7 @@ export default function MapScreen() {
         fetchGooglePlacesParking(pin.latitude, pin.longitude),
         fetchCityParkingData(pin.latitude, pin.longitude),
         fetchNearbyTowCompanies(pin.latitude, pin.longitude),
+        fetch(`${apiBase}/api/parking-search?lat=${pin.latitude}&lon=${pin.longitude}&radius=1500`).then(r => r.json()),
       ]);
 
       const restrictions  = restrictionRes.status  === 'fulfilled' ? restrictionRes.value  : [];
@@ -111,6 +120,7 @@ export default function MapScreen() {
       const googleParking = googleParkingRes.status === 'fulfilled' ? googleParkingRes.value : [];
       const cityData      = cityDataRes.status      === 'fulfilled' ? cityDataRes.value      : null;
       const tows          = towsRes.status          === 'fulfilled' ? towsRes.value          : [];
+      const enriched      = enrichedRes.status      === 'fulfilled' ? (enrichedRes.value?.garages || []) : [];
 
       if (geoInfo) setGeocodeInfo(geoInfo);
       setTowCompanies(tows);
@@ -121,6 +131,34 @@ export default function MapScreen() {
         ...(Array.isArray(cityData?.garages) ? cityData.garages : []),
       ]);
       if (cityData?.meters) setCityMeters(cityData.meters);
+
+      // Set enriched garages and initialise per-garage rate loading state
+      setEnrichedGarages(enriched);
+      const initialRates = {};
+      for (const g of enriched) {
+        initialRates[g.id] = { loading: !!g.website, data: null };
+      }
+      setGarageRates(initialRates);
+
+      // Kick off per-garage rate fetches
+      for (const g of enriched) {
+        if (!g.website) continue;
+        const controller = new AbortController();
+        const timerId = setTimeout(() => controller.abort(), 5000);
+        fetch(
+          `${apiBase}/api/parking-rates?website=${encodeURIComponent(g.website)}&name=${encodeURIComponent(g.name)}`,
+          { signal: controller.signal }
+        )
+          .then(r => r.json())
+          .then(data => {
+            clearTimeout(timerId);
+            setGarageRates(prev => ({ ...prev, [g.id]: { loading: false, data } }));
+          })
+          .catch(() => {
+            clearTimeout(timerId);
+            setGarageRates(prev => ({ ...prev, [g.id]: { loading: false, data: null } }));
+          });
+      }
 
       // ✅ Pass stateCode string + city string (not the full geoInfo object)
       const v = computeVerdict(
