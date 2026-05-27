@@ -45,10 +45,11 @@ export default function App() {
   const [cityMeters, setCityMeters]     = useState([]);
   const [towCompanies, setTowCompanies] = useState([]);
 
-  const [activeTab, setActiveTab]     = useState('status');
-  const [notification, setNotification] = useState(null);
+  const [activeTab, setActiveTab]         = useState('status');
+  const [selectedGarageId, setSelectedGarageId] = useState(null);
+  const [notification, setNotification]   = useState(null);
   const [notifPermission, setNotifPermission] = useState('default');
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen]   = useState(false);
 
   const lastFetchRef = useRef(null);
 
@@ -170,6 +171,11 @@ export default function App() {
     lastFetchRef.current = null;
   }, []);
 
+  const handleGarageSelect = useCallback((garageId) => {
+    setSelectedGarageId(garageId);
+    setActiveTab('parking');
+  }, []);
+
   const handleUseMyLocation = useCallback(() => {
     setActivePin(null);
     lastFetchRef.current = null;
@@ -181,6 +187,32 @@ export default function App() {
     lastFetchRef.current = null;
     if (queryLocation) fetchAllData(queryLocation);
   }, [queryLocation, fetchAllData]);
+
+  // Use enrichedGarages (Google Places) when available; fall back to OSM data
+  // so the Garages tab always shows something even without an API key.
+  const garagesForTab = enrichedGarages.length > 0
+    ? enrichedGarages
+    : nearbyParking.map(p => ({
+        id:                 `osm-${p.id}`,
+        name:               p.name,
+        address:            p.operator || null,
+        lat:                p.lat,
+        lon:                p.lon,
+        website:            null,
+        phone:              null,
+        rating:             null,
+        user_ratings_total: null,
+        open_now:           null,
+        price_level:        p.fee === 'no' ? 0 : p.fee === 'yes' ? 2 : null,
+        distance_m:         queryLocation
+                              ? Math.round(distanceM(queryLocation.lat, queryLocation.lon, p.lat, p.lon))
+                              : null,
+        maps_url:           `https://www.google.com/maps?q=${p.lat},${p.lon}`,
+        fee:                p.fee,
+        type:               p.type,
+        capacity:           p.capacity,
+        _source:            'osm',
+      }));
 
   return (
     <div className={styles.app}>
@@ -208,10 +240,12 @@ export default function App() {
             mapCenter={mapCenter}
             activePin={activePin}
             nearbyParking={nearbyParking}
+            enrichedGarages={enrichedGarages}
             cityMeters={cityMeters}
             towCompanies={towCompanies}
             verdict={verdict}
             onMapClick={handleMapClick}
+            onGarageSelect={handleGarageSelect}
           />
           {activePin && (
             <button className={styles.myLocationBtn} onClick={handleUseMyLocation}>
@@ -258,10 +292,13 @@ export default function App() {
                 )}
                 {activeTab === 'parking' && (
                   <NearbyParking
-                    garages={enrichedGarages}
+                    garages={garagesForTab}
+                    isOsmFallback={enrichedGarages.length === 0 && nearbyParking.length > 0}
                     cityMeters={cityMeters}
                     userLocation={queryLocation}
                     geocodeInfo={geocodeInfo}
+                    selectedGarageId={selectedGarageId}
+                    onGarageDeselect={() => setSelectedGarageId(null)}
                   />
                 )}
                 {activeTab === 'tow' && (

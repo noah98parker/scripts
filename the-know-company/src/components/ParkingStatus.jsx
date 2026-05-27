@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { computeTowRisk } from '../services/parkingRules';
 import SignDecoder from './SignDecoder';
+import StreetViewSigns from './StreetViewSigns';
 import styles from './ParkingStatus.module.css';
 
 const STATUS_CONFIG = {
@@ -136,6 +137,9 @@ export default function ParkingStatus({ verdict, geocodeInfo, queryLocation, isP
           </div>
         )}
       </div>
+
+      {/* ── Street View sign OCR ── */}
+      <StreetViewSigns location={queryLocation} />
 
       {/* ── Sign Decoder toggle ── */}
       <button

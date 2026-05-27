@@ -5,6 +5,30 @@
   gap: 12px;
 }
 
+/* OSM fallback notice */
+.osmBanner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 12px;
+  color: #1e40af;
+  line-height: 1.45;
+}
+
+/* Ring highlight when a garage is selected from the map */
+.garageHighlight {
+  border-radius: var(--radius-lg);
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+  animation: garageHighlightPulse 0.6s ease-out;
+}
+
+@keyframes garageHighlightPulse {
+  0%   { outline-color: #60a5fa; outline-width: 6px; }
+  100% { outline-color: #1d4ed8; outline-width: 3px; }
+}
+
 .empty {
   padding: 48px 24px;
   text-align: center;

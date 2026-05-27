@@ -1,8 +1,17 @@
 {
   "functions": {
-    "api/parking-rates.js":  { "maxDuration": 30 },
-    "api/parking-search.js": { "maxDuration": 30 },
-    "api/decode-sign.js":    { "maxDuration": 30 },
-    "api/places.js":         { "maxDuration": 15 }
-  }
+    "api/parking-rates.js":     { "maxDuration": 30 },
+    "api/parking-search.js":    { "maxDuration": 30 },
+    "api/decode-sign.js":       { "maxDuration": 30 },
+    "api/street-view-signs.js": { "maxDuration": 30 },
+    "api/street-view-image.js": { "maxDuration": 10 },
+    "api/places.js":            { "maxDuration": 15 },
+    "api/admin/auth.js":        { "maxDuration": 10 },
+    "api/admin/status.js":      { "maxDuration": 10 },
+    "api/admin/test.js":        { "maxDuration": 20 }
+  },
+  "rewrites": [
+    { "source": "/admin/(.*)", "destination": "/index.html" },
+    { "source": "/admin",     "destination": "/index.html" }
+  ]
 }
