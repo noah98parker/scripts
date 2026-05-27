@@ -61,12 +61,155 @@ export const STATE_LAWS = {
 };
 
 // ─── OSM tag → human verdict ─────────────────────────────────────────────────
+
+/**
+ * Parse a parking lot's amenity=parking tags into a structured verdict.
+ * Called only when no explicit street-level restriction was found.
+ */
+function parseParkingLotTags(tags) {
+  const t = tags;
+  const access = t.access || 'yes';
+  const fee = t.fee;
+  const maxstay = t.maxstay;
+  const opening_hours = t.opening_hours || null;
+  const operator = t.operator || t.name || null;
+  const capacity = t.capacity ? `${t.capacity} spaces` : null;
+  const lotType = t.parking || 'surface';
+  const charge = t.charge || null;
+
+  // Determine lot type label
+  const typeLabel = {
+    'multi-storey': 'Parking Garage',
+    'underground': 'Underground Garage',
+    'rooftop': 'Rooftop Lot',
+    'surface': 'Parking Lot',
+  }[lotType] || 'Parking Lot';
+
+  // Private / restricted access
+  if (access === 'private' || access === 'no') {
+    return {
+      status: 'no_parking',
+      label: `Private ${typeLabel}`,
+      color: 'red',
+      icon: '🚫',
+      note: `This is a private ${typeLabel.toLowerCase()}. Unauthorized vehicles are subject to immediate tow at owner's expense.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      isLot: true,
+      towImmediate: true,
+    };
+  }
+
+  // Customers only
+  if (access === 'customers' || access === 'destination') {
+    return {
+      status: 'permit',
+      label: `Customers Only — ${typeLabel}`,
+      color: 'purple',
+      icon: '🪧',
+      note: `${typeLabel} reserved for customers. Non-customer vehicles may be towed without notice.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      isLot: true,
+    };
+  }
+
+  // Paid parking
+  if (fee === 'yes') {
+    return {
+      status: 'metered',
+      label: `Paid ${typeLabel}`,
+      color: 'blue',
+      icon: '🅿️',
+      note: charge ? `Rate: ${charge}` : `This is a paid ${typeLabel.toLowerCase()}. Pay at machine or attendant before leaving.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      charge,
+      isLot: true,
+    };
+  }
+
+  // Free with time limit
+  if (fee === 'no' && maxstay) {
+    return {
+      status: 'time_limited',
+      label: `Free ${typeLabel} — ${maxstay} Limit`,
+      color: 'yellow',
+      icon: '⏱️',
+      maxstay,
+      note: `Free parking with a ${maxstay} time limit. Overstay may result in a ticket or tow.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      isLot: true,
+    };
+  }
+
+  // Free parking lot (no fee tag or fee=no)
+  if (fee === 'no' || fee === 'free') {
+    return {
+      status: 'allowed',
+      label: `Free ${typeLabel}`,
+      color: 'green',
+      icon: '✅',
+      note: `Free public ${typeLabel.toLowerCase()}. No fee required.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      isLot: true,
+    };
+  }
+
+  // Has time limit but no explicit fee tag
+  if (maxstay) {
+    return {
+      status: 'time_limited',
+      label: `${typeLabel} — ${maxstay} Limit`,
+      color: 'yellow',
+      icon: '⏱️',
+      maxstay,
+      note: `Time limit: ${maxstay}. Check signs for fee information.`,
+      lotType,
+      operator,
+      opening_hours,
+      capacity,
+      isLot: true,
+    };
+  }
+
+  // Unknown fee / general lot
+  return {
+    status: 'advisory',
+    label: typeLabel,
+    color: 'blue',
+    icon: 'ℹ️',
+    note: `${typeLabel}${opening_hours ? ` · Hours: ${opening_hours}` : ''}${capacity ? ` · ${capacity}` : ''}. Check signs for fee and time limits.`,
+    lotType,
+    operator,
+    opening_hours,
+    capacity,
+    isLot: true,
+  };
+}
+
 function parseOSMRestrictions(elements) {
   if (!elements || !Array.isArray(elements) || elements.length === 0) return null;
+
+  // ── Pass 1: explicit street-level restrictions (highest priority) ───────────
   for (const el of elements) {
     if (!el?.tags) continue;
     const t = el.tags;
-    // Check lane-level tags
+    if (t.amenity === 'parking') continue; // handled in pass 2
+
+    // Lane-level tags
     const laneValues = [
       t['parking:lane:right'],
       t['parking:lane:left'],
@@ -75,10 +218,10 @@ function parseOSMRestrictions(elements) {
 
     for (const v of laneValues) {
       if (v === 'no_stopping') return { status: 'no_stopping', label: 'No Stopping', color: 'red', icon: '🚫' };
-      if (v === 'no_parking') return { status: 'no_parking', label: 'No Parking', color: 'red', icon: '🚫' };
+      if (v === 'no_parking')  return { status: 'no_parking',  label: 'No Parking',  color: 'red', icon: '🚫' };
       if (v === 'no_standing') return { status: 'no_standing', label: 'No Standing', color: 'red', icon: '🚫' };
       if (v === 'parallel' || v === 'diagonal' || v === 'perpendicular') {
-        return { status: 'allowed', label: 'Parking Allowed', color: 'green', icon: '✅' };
+        return { status: 'allowed', label: 'Street Parking Allowed', color: 'green', icon: '✅' };
       }
     }
 
@@ -87,18 +230,21 @@ function parseOSMRestrictions(elements) {
     if (cond === 'no_parking') return { status: 'no_parking', label: 'No Parking', color: 'red', icon: '🚫' };
     if (cond === 'time_limited') {
       const maxstay = t['parking:condition:maxstay'] || t.maxstay;
-      return {
-        status: 'time_limited',
-        label: maxstay ? `${maxstay} Limit` : 'Time Limited',
-        color: 'yellow',
-        icon: '⏱️',
-        maxstay,
-      };
+      return { status: 'time_limited', label: maxstay ? `${maxstay} Limit` : 'Time Limited', color: 'yellow', icon: '⏱️', maxstay };
     }
-    if (cond === 'free') return { status: 'allowed', label: 'Free Parking', color: 'green', icon: '✅' };
-    if (cond === 'ticket') return { status: 'metered', label: 'Metered Parking', color: 'blue', icon: '🅿️' };
-    if (cond === 'residents') return { status: 'permit', label: 'Permit Required', color: 'yellow', icon: '🪧' };
+    if (cond === 'free')      return { status: 'allowed',  label: 'Free Street Parking', color: 'green',  icon: '✅' };
+    if (cond === 'ticket')    return { status: 'metered',  label: 'Metered Parking',      color: 'blue',   icon: '🅿️' };
+    if (cond === 'residents') return { status: 'permit',   label: 'Permit Required',       color: 'yellow', icon: '🪧' };
   }
+
+  // ── Pass 2: parking lot / area tags (fallback when no street rules found) ──
+  for (const el of elements) {
+    if (!el?.tags) continue;
+    if (el.tags.amenity === 'parking') {
+      return parseParkingLotTags(el.tags);
+    }
+  }
+
   return null;
 }
 
@@ -141,6 +287,87 @@ export function computeVerdict(osmElements, stateCode, cityName) {
     stateLaw: null,
     cityName,
   };
+}
+
+/**
+ * Compute a tow risk score for the current location.
+ *
+ * @param {object|null} verdict       — from computeVerdict()
+ * @param {Array}       towCompanies  — from fetchNearbyTowCompanies()
+ * @param {object|null} queryLocation — { lat, lon } of the checked spot
+ * @returns {{ level: string, score: number, color: string, emoji: string, factors: string[] }}
+ */
+export function computeTowRisk(verdict, towCompanies = [], queryLocation = null) {
+  const factors = [];
+  let score = 0;
+
+  // ── Base score from OSM/state verdict ───────────────────────────────────────
+  const status = verdict?.status;
+
+  // Private lot: highest possible risk — tow is immediate with no notice
+  if (verdict?.towImmediate || (verdict?.isLot && status === 'no_parking')) {
+    score += 10;
+    factors.push('Private lot — unauthorized vehicles towed immediately');
+  } else if (status === 'no_parking' || status === 'no_stopping' || status === 'no_standing') {
+    score += 8;
+    factors.push('Posted no-parking zone');
+  } else if (status === 'permit') {
+    if (verdict?.isLot) {
+      score += 7;
+      factors.push('Customers-only lot — non-customer vehicles towed');
+    } else {
+      score += 6;
+      factors.push('Permit-only zone');
+    }
+  } else if (status === 'time_limited') {
+    score += 4;
+    factors.push(verdict?.isLot
+      ? `Parking lot time limit: ${verdict.maxstay || 'check signs'}`
+      : 'Time-restricted street');
+  } else if (status === 'metered') {
+    score += verdict?.isLot ? 5 : 3;
+    factors.push(verdict?.isLot ? 'Paid lot — unpaid/overstayed vehicles towed' : 'Metered zone — overstay risk');
+  } else if (status === 'allowed') {
+    score += 1;
+  } else {
+    // unknown/advisory — assume moderate risk
+    score += 5;
+    factors.push('Parking rules unclear — check signs');
+  }
+
+  // ── Tow company density modifier ────────────────────────────────────────────
+  const nearbyCount = (queryLocation && towCompanies.length > 0)
+    ? towCompanies.filter(c => {
+        const dLat = (c.lat - queryLocation.lat) * 111320;
+        const dLon = (c.lon - queryLocation.lon) * 111320 * Math.cos(queryLocation.lat * Math.PI / 180);
+        return Math.sqrt(dLat * dLat + dLon * dLon) < 2000; // within 2 km
+      }).length
+    : Math.min(towCompanies.length, 10);
+
+  if (nearbyCount >= 5) {
+    score += 2;
+    factors.push(`${nearbyCount} tow companies within 2 km — high-patrol area`);
+  } else if (nearbyCount >= 2) {
+    score += 1;
+    factors.push(`${nearbyCount} tow companies nearby`);
+  }
+
+  // ── State law modifiers ──────────────────────────────────────────────────────
+  const law = verdict?.stateLaw;
+  if (law?.streetCleaning) {
+    score += 1;
+    factors.push('Street cleaning enforced in this state');
+  }
+
+  const clamped = Math.min(10, Math.max(1, score));
+
+  if (clamped >= 7) {
+    return { level: 'High', score: clamped, color: '#dc2626', bg: '#fef2f2', emoji: '🔴', factors };
+  }
+  if (clamped >= 4) {
+    return { level: 'Medium', score: clamped, color: '#d97706', bg: '#fffbeb', emoji: '🟡', factors };
+  }
+  return { level: 'Low', score: clamped, color: '#059669', bg: '#f0fdf4', emoji: '🟢', factors };
 }
 
 // Full-name → 2-letter code lookup (fallback when ISO field is missing)
