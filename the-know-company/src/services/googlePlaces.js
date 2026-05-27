@@ -7,7 +7,11 @@
 const BASE = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
 
 export function getGoogleApiKey() {
-  return localStorage.getItem('tkc_google_places_key') || '';
+  // 1. User-entered key takes priority (set via ⚙️ Settings modal)
+  // 2. Falls back to build-time env var (set in Vercel → Environment Variables as VITE_GOOGLE_PLACES_KEY)
+  return localStorage.getItem('tkc_google_places_key')
+    || import.meta.env.VITE_GOOGLE_PLACES_KEY
+    || '';
 }
 
 export function setGoogleApiKey(key) {
