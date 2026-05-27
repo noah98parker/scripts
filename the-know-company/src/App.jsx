@@ -188,6 +188,32 @@ export default function App() {
     if (queryLocation) fetchAllData(queryLocation);
   }, [queryLocation, fetchAllData]);
 
+  // Use enrichedGarages (Google Places) when available; fall back to OSM data
+  // so the Garages tab always shows something even without an API key.
+  const garagesForTab = enrichedGarages.length > 0
+    ? enrichedGarages
+    : nearbyParking.map(p => ({
+        id:                 `osm-${p.id}`,
+        name:               p.name,
+        address:            p.operator || null,
+        lat:                p.lat,
+        lon:                p.lon,
+        website:            null,
+        phone:              null,
+        rating:             null,
+        user_ratings_total: null,
+        open_now:           null,
+        price_level:        p.fee === 'no' ? 0 : p.fee === 'yes' ? 2 : null,
+        distance_m:         queryLocation
+                              ? Math.round(distanceM(queryLocation.lat, queryLocation.lon, p.lat, p.lon))
+                              : null,
+        maps_url:           `https://www.google.com/maps?q=${p.lat},${p.lon}`,
+        fee:                p.fee,
+        type:               p.type,
+        capacity:           p.capacity,
+        _source:            'osm',
+      }));
+
   return (
     <div className={styles.app}>
       <Header
@@ -266,7 +292,8 @@ export default function App() {
                 )}
                 {activeTab === 'parking' && (
                   <NearbyParking
-                    garages={enrichedGarages}
+                    garages={garagesForTab}
+                    isOsmFallback={enrichedGarages.length === 0 && nearbyParking.length > 0}
                     cityMeters={cityMeters}
                     userLocation={queryLocation}
                     geocodeInfo={geocodeInfo}

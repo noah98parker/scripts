@@ -170,6 +170,15 @@ function GarageCard({ garage, geocodeInfo }) {
           {garage.address && (
             <div className={styles.garageAddress}>{garage.address}</div>
           )}
+          {!garage.address && garage.type && (
+            <div className={styles.garageAddress}>
+              {garage.type === 'multi-storey' ? 'Parking Garage' :
+               garage.type === 'underground' ? 'Underground Parking' :
+               garage.type === 'rooftop' ? 'Rooftop Parking' : 'Parking Lot'}
+              {garage.capacity ? ` · ${garage.capacity} spaces` : ''}
+              {garage.fee === 'no' ? ' · Free' : garage.fee === 'yes' ? ' · Paid' : ''}
+            </div>
+          )}
 
           {(garage.rating != null) && (
             <div className={styles.garageRatingRow}>
@@ -228,7 +237,7 @@ function GarageCard({ garage, geocodeInfo }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function NearbyParking({ garages, cityMeters = [], userLocation, geocodeInfo, selectedGarageId, onGarageDeselect }) {
+export default function NearbyParking({ garages, isOsmFallback = false, cityMeters = [], userLocation, geocodeInfo, selectedGarageId, onGarageDeselect }) {
   const hasGarages = garages && garages.length > 0;
   const hasMeters  = cityMeters && cityMeters.length > 0;
   const garageRefs = useRef({});
@@ -277,6 +286,11 @@ export default function NearbyParking({ garages, cityMeters = [], userLocation, 
             <h2 className={styles.heading}>🏢 Nearby Garages</h2>
             <span className={styles.count}>{garages.length} found</span>
           </div>
+          {isOsmFallback && (
+            <div className={styles.osmBanner}>
+              ℹ️ Showing basic OpenStreetMap data — connect Google Places for full details &amp; rates.
+            </div>
+          )}
           <div className={styles.list}>
             {garages.map(garage => {
               const isSelected = garage.id === selectedGarageId;
