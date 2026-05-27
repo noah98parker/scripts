@@ -250,6 +250,7 @@ export default function App() {
                     queryLocation={queryLocation}
                     isPin={!!activePin}
                     cityMeters={cityMeters}
+                    towCompanies={towCompanies}
                   />
                 )}
                 {activeTab === 'parking' && (
